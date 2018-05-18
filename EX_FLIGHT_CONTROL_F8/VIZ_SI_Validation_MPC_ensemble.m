@@ -1,26 +1,23 @@
 function VIZ_SI_Validation_MPC_ensemble(ct,t_valid,u_valid,xHistory,tHistory,uHistory,Results,t,tA,xA,xB,xC,xD,select_model,SystemModel,figpath,N,InputSignalType,Nmodels,ModelCollection)
 t_single = t;
 ENSEMBLE_DATA = 1;
-getTrainingData
+getTrainingData     % Get training data to plot it
+NicN = 20;          % Show only the first 20 trajectories
 
-NicN = 20;
-%%
-
+%% Shift input for better readability of figure
 uval = 0.7;
 u_data = ([nan(size(t_single))',u_valid(2:end-1),uHistory(1:ct-1)])+uval;
 u_data(1:length(t)) = u(:,1,1)+uval;
-%%
+
+%% Show results
 clear ph pt th
 
-
+% Set limits
 xlimval = [0 tHistory(end)];
-% xlimval = [0 tHistory(end)];
-% ylimval = [-1.8 1];
 ylimval = [-4 4];
 Jmax = max(cumsum(Results(1).J));
 
 figure;
-
 xlabel(gca,'Time')
 ylabel(gca,'xi')
 set(gca,'LineWidth',1, 'FontSize',14)
@@ -30,17 +27,13 @@ set(gcf,'PaperPositionMode','auto')
 hold on, box on,
 ccolors = get(gca,'colororder');
 
-ModelColors = zeros(3,3,Nmodels);
-% for jM = 1:Nmodels
-%     ModelColors(:,:,iM) = [ ccolors(1,:)-[0 0.2 0.2];
-%                             ccolors(2,:)-[0.1 0.2 0.09]];                
-% end
-
+% Define colors for each model
+ModelColors = zeros(3,3,Nmodels);           
 ModelColors(:,:,1) = [1 0 0; 1 0 0; 1 0 0];
 ModelColors(:,:,2) = [0 1 0; 0 1 0; 0 1 0];
 ModelColors(:,:,3) = [0.7,0.7,1; 0.7,0.7,1; 0.7,0.7,1];
 
-
+% Plot vertical lines to distinguish training, validation, control stage
 plot([t(end),t(end)],[ylimval],':','Color',[0.4,0.4,0.4],'LineWidth',1)
 plot([t_single(end),t_single(end)],[ylimval],':','Color',[0.4,0.4,0.4],'LineWidth',1)
 plot([tA(end),tA(end)],[ylimval],':','Color',[0.4,0.4,0.4],'LineWidth',1)
@@ -53,7 +46,7 @@ if size(t_valid,2)~=1
     t_valid = t_valid';
 end
 
-% plot(tHistory(2:end),200*cumsum(Results(1).J(2:end))./Jmax,'-','Color',ccolors(end,:))
+% Plot subset of trajectories of training data
 for iIC = 1:NicN
     data2plot = ([nan(size(t_single));xA(2:end,2);xHistory(2,2:end)']);
     data2plot(1:length(t)) = x(:,2,iIC);
@@ -70,7 +63,6 @@ for iIC = 1:NicN
     ph(1) = plot([t_single;tA(2:end);tHistory(2:end)'],data2plot,'-','Color',ccolors(1,:),'LineWidth',1);
 end
 plot([t_single;t_valid(2:end-1);tHistory(2:ct)'],uval.*ones(size([t_single;t_valid(2:end-1);tHistory(2:ct)'])),'-k','LineWidth',0.5);
-% ph(4) = plot([t_single;t_valid(2:end-1);tHistory(2:ct)'],u_data,'-k','LineWidth',1);
 
 for iIC = 1:NicN
     u_data = ([nan(size(t_single))',u_valid(2:end-1),uHistory(2:ct)])+uval;
@@ -78,30 +70,23 @@ for iIC = 1:NicN
     ph(4) = plot([t_single;tA(2:end-1);tHistory(2:ct)'],u_data,'-','Color','k','LineWidth',1);
 end
 
+% Just a straight line
 plot([t_single;tHistory'],zeros(length([t_single;tHistory']),1),'-k','LineWidth',0.5)
-% plot([t;tHistory'],xref1(1)*ones(length([t;tHistory']),1),'-','Color',ccolors(1,:),'LineWidth',0.5)
-% plot([t;tHistory'],xref1(2)*ones(length([t;tHistory']),1),'-','Color',ccolors(2,:),'LineWidth',0.5)
-% plot([tHistory'],rHistory,'-','Color','k','LineWidth',0.5)%ccolors(1,:)
-% plot([tHistory'],xref1(2)*ones(length([tHistory']),1),'-','Color',ccolors(2,:),'LineWidth',0.5)
-% plot([tHistory'],xref1(3)*ones(length([tHistory']),1),'-','Color',ccolors(3,:),'LineWidth',0.5)
 
-% hold off
+% Position legend etc.
 ax1 = gca;
 set(ax1,'xlim',xlimval,'ylim',ylimval,'XColor','k','YColor','k');
-
 legend_handle1 = legend(ph,'x1','x2','x3','Control','Location','NorthWest','location','SouthWest');
 legend_handle1.Position = [legend_handle1.Position(1)+0.00 legend_handle1.Position(2)-0.02 legend_handle1.Position(3:4)];
 
-
-% ax2 = axes('Position',get(ax1,'Position'), 'Visible','off','Color','none');
+% Create new axis
 ax2 = axes('Position',get(ax1,'Position'),'xlim',xlimval,'ylim',ylimval,'Visible','off','Color','none');
 
+% Show prediction over validation stage
 data2plot = ([nan(size(t_single));xA(2:end,1);xHistory(1,2:end)']);
 data2plot(1:length(t)) = x(:,1,1);
 pt(1) = plot([t_single;tA(2:end);tHistory(2:end)'],data2plot,'-','Color',ccolors(1,:),'LineWidth',1,'Parent',ax2); 
-
 hold on
-
 switch select_model
     case 'DMDc'
         pt(2) = plot(tB,xB(:,1),'-.','Color',ModelColors(1,:,1),'LineWidth',2,'Parent',ax2);
@@ -121,14 +106,12 @@ switch select_model
         plot(tA(1:end),xD(:,3),'-.','Color',ModelColors(3,:,3),'LineWidth',2,'Parent',ax2);
 end
 
-
+% Position legend etc.
 set(gca,'xlim',xlimval,'ylim',ylimval,'Visible','off','Color','none')
 legend_handle2 = legend(gca,pt,'True',select_model,'location','NorthEast');
-% legend_handle2.Position = [legend_handle1.Position(1)+0.35 legend_handle1.Position(2)+0.02 legend_handle2.Position(3:4)];
 legend_handle2.Position = [legend_handle1.Position(1)+0.5 legend_handle1.Position(2)+0.02 legend_handle2.Position(3:4)];
 
 set(legend_handle2, 'Color', 'none');
-% set(gca,'xlim',[0 tHistory(end)],'ylim',[-45 270],'Visible','off','Color','none')
 set(gca,'LineWidth',1, 'FontSize',14)
 
 print('-depsc2', '-cmyk', '-loose', [figpath,'EX_',SystemModel,'_MPC_',select_model,'_N_',num2str(N),'_ensemble.eps']);

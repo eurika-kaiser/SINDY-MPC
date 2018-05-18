@@ -1,4 +1,4 @@
-% LOTKA-VOLTERRA system
+% F8 Aircraft system
 % System identification: DelayDMDc
 
 clear all, close all, clc
@@ -8,17 +8,22 @@ addpath('../utils');
 
 SystemModel = 'F8';
 Nvar = 3;
+
 %% Generate Data
-InputSignalType = 'sine3';%prbs; chirp; noise; sine2; sine3; sphs; mixed
-Ndelay = 1;
-ENSEMBLE_DATA = 0;
-ONLY_TRAINING_LENGTH = 1;
+InputSignalType = 'sine3';% other options: prbs; chirp; noise; sine2; sine3; sphs; mixed
+Ndelay = 1;                 % Number of delays to augment state vector
+ENSEMBLE_DATA = 0;          % Use ensemble of trajectories = 1
+ONLY_TRAINING_LENGTH = 1; 
 getTrainingData
 
-Nt = length(tspan)-1;
+% Reference state
 xref = zeros(Nvar,1);
+
+% Some parameters
+Nt = length(tspan)-1;
 T = length(tspan);
-%% DMDc: B = unknown  and with time delay coordinate
+%% DMDc assuming B = unknown and x may be augmented with time-delayed states
+% Identify A, B from xdot = Ax + Bu
 
 if Ndelay == 1
     ModelName = 'DMDc';
@@ -27,7 +32,7 @@ elseif Ndelay>1
 end
 
 Hu = getHankelMatrix_MV(u',1);
-xmean = xref'; %mean(x);
+xmean = xref'; 
 X   = x - repmat(xmean,[T 1]);
 Hx  = getHankelMatrix_MV(X,1);
 numOutputs = size(Hx,1); numInputs = size(Hu,1); numVar = 3;
@@ -52,38 +57,34 @@ end
 
 xlim([0 (length(tspan)-1)*dt]), ylim([-0.8 0.8])
 xlabel('Time')
-ylabel('Population size')
-% legend('Prey (True)','Predator (True)', 'Prey (DMDc)','Predator (DMDc)')
+ylabel('xi')
 legend(ph([1,3]),'True',ModelName)
 set(gca,'LineWidth',1, 'FontSize',14)
 set(gcf,'Position',[100 100 300 200])
 set(gcf,'PaperPositionMode','auto')
 print('-depsc2', '-loose', '-cmyk', [figpath,'EX_',SystemModel,'_SI_',ModelName,'_',InputSignalType,'.eps']);
 
-%% Prediction
-% Reference
+%% Validation
+% Truth
 tspanV   = [100:dt:200];
 xA      = xv;
 tA      = tv;
 
 % Model
-
 if Ndelay == 1
     x0      = [x(end,1:3)];
     Hunew   = [u(end),uv(1:end)];
-    [xBm,tB] = lsim(sysmodel_DMDc,Hunew,tspanV,[x0-[xmean]]');
+    [xB,tB] = lsim(sysmodel_DMDc,Hunew,tspanV,[x0-[xmean]]');
 elseif Ndelay > 1
     x0      = [x(end-Ndelay+1,1:3),x(end,1:3)];
     Hunew   = [ u(end-Ndelay+1:end),uv(1:end-Ndelay);
         u(end),uv(1:end-1)];
-    [xBm,tB] = lsim(sysmodel_DMDc,Hunew,tspanV,[x0-[xmean]]');
-    xBm = xBm(:,4:6); xBm = xBm + repmat(xmean,[size(xBm,1) 1]);
+    [xB,tB] = lsim(sysmodel_DMDc,Hunew,tspanV,[x0-[xmean]]');
+    xB = xB(:,4:6); xB = xB + repmat(xmean,[size(xB,1) 1]);
 end
-
-xBm = xBm + repmat(xmean,[length(tB) 1]);
+xB = xB + repmat(xmean,[length(tB) 1]);
 
 %% Show training and prediction
-xB = xBm;
 VIZ_SI_Validation
 
 %% Save Data
