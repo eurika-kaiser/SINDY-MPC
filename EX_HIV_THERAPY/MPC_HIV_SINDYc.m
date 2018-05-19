@@ -1,6 +1,5 @@
-% MPC applied to LOTKA-VOLTERRA system using
-% a SINDYc model.
-
+% MPC applied to HIV system using a SINDYc model.
+% Function for TESTING
 
 clear all, close all, clc
 figpath = '../../FIGURES/HIV/'; mkdir(figpath)
@@ -12,13 +11,8 @@ ModelName = 'SINDYc';
 
 %% Load Model
 Nvar = 5;
-
 InputSignalTypeModel = 'prbs'; % prbs; chirp; noise; sine2; sphs; mixed
-
-% SINDYc
-load(fullfile(datapath,['EX_',SystemModel,'_SI_SINDYc','_',InputSignalTypeModel,'.mat'])) % Model
-
-
+load(fullfile(datapath,['EX_',SystemModel,'_SI_SINDYc','_',InputSignalTypeModel,'.mat'])) 
 
 %% TRUE SYSTEM PARAMETERS
 run_HIV_params
@@ -47,22 +41,22 @@ for i = 1:Nvar
 end
 
 
-%% Apply Model predictive controlto system using SINDYc model
+%% Apply Model predictive control to system using SINDYc model
 select_model = 'SINDYc';
-pest.ahat = Xi0(:,1:Nvar);%Model.Xi(:,1:Nvar);
+pest.ahat = Model.Xi(:,1:Nvar); % Use Xi0(:,1:Nvar) to execute true model parameters
 pest.polyorder = Model.polyorder;
 pest.usesine = Model.usesine;
-pest.dt = 1/12;%Model.dt;
+pest.dt = 1/12; %Model.dt; % Don't need to use the same time step model was trained on
 
 
 % Parameters MPC
 options = optimoptions('fmincon','Algorithm','sqp','Display','none', ...
     'MaxIterations',100);
 Nweeks = 50;
-Duration = Nweeks*7;                 % Run for 'Duration' time units
+Duration = Nweeks*7;             % Run for 'Duration' time units
 Ton = 0;                         % Time units when control is turned on   
 x0n = [10, 0.1, 0.1, 0.1, 0.1]'; % Initial condition
-Ts  = 1/24;             % Sampling time [1/hr]
+Ts  = pest.dt;                   % Sampling time [1/hr]
 Tcontrol = 0;
 getMPCparams    
 
@@ -75,7 +69,7 @@ xref(5) = (xref(2)*c2*(alpha1*q-a) + b2*alpha1)/(c2*p2*xref(2));
 xref(3) = h*xref(5)/(c2*q*xref(2));
 
 
-% Prepare variables
+% Initialize variables
 Nt = (Duration/Ts)+1;
 uopt0    = 0;
 xhat     = x0n;
@@ -91,7 +85,7 @@ fprintf('Simulation started.  It might take a while...\n')
 tic
 for ct = 1:(Duration/Ts)   % For each iteration: take measurements & optimize control input & apply control input
     
-    if mod(ct*Ts,7) == 0
+    if mod(ct*Ts,7) == 0 % Update once a week
         % NMPC with full-state feedback
         COSTFUN = @(u) ObjectiveFCN_models(u,xhat,N,Nu,xref,uHistory(:,ct),pest,diag(Q),R,Ru,select_model);
         CONSFUN = @(u) ConstraintFCN_models(u,uHistory(:,ct),xhat,N,LBo,UBo,LBdu,UBdu,pest,select_model);
@@ -99,10 +93,10 @@ for ct = 1:(Duration/Ts)   % For each iteration: take measurements & optimize co
     end
     
     % Integrate system
-    xhat = rk4u(@HIVsys_ZURAKOWSKI,xhat,uopt(1),Ts/2,2,[],0); %10, 7000: weekly
+    xhat = rk4u(@HIVsys_ZURAKOWSKI,xhat,uopt(1),Ts/2,2,[],0); 
     xHistory(:,ct+1) = xhat;
     uHistory(:,ct+1) = uopt(1);
-    tHistory(:,ct+1) = ct*Ts+Tcontrol;  %ct*Ts+Tcontrol;
+    tHistory(:,ct+1) = ct*Ts+Tcontrol; 
     rHistory(:,ct+1) = xref;
     
     if mod(ct,1000) == 0
@@ -113,8 +107,6 @@ for ct = 1:(Duration/Ts)   % For each iteration: take measurements & optimize co
 end
 fprintf('Simulation finished!\n')
 toc
-
-return
 
 %%
 clear ph
@@ -145,20 +137,14 @@ xlabel('Time')
 ylabel('xi')
 legend(ph,'x1','x2','x3','Control')
 axis tight
-% ylim([-15 260])
-% xlim([100,200.0001])
-%ylim([min(uHistory)-5 260])
 set(gca,'xtick',[50,100,150,200])
 set(gca,'LineWidth',1, 'FontSize',14)
 set(gcf,'Position',[100 100 300 200])
 set(gcf,'PaperPositionMode','auto')
-% print('-depsc2', [figpath,'EX_LOTKA_DynamicsControlled_cnstrnd_N',num2str(N),'.eps']);
 
 %% Save Results
 Results.t = tHistory;
 Results.x = xHistory;
 Results.u = uHistory;
 Results.J = evalObjectiveFCN(uHistory,xHistory,rHistory,diag(Q),R,Ru);
-
-% save(fullfile(datapath,['EX_LOTKA_MPC_SINDYc_N',num2str(N),'.mat']),'Results')
 
