@@ -1,7 +1,5 @@
-% LORENZ system
-%118.2675
-%98.2860
-%2.1048e+03
+% Optimal drug treatment of HIV using model predictive control
+% and various models
 
 clear all, close all, clc
 
@@ -9,32 +7,28 @@ SystemModel = 'HIV';
 
 figpath = ['../../FIGURES/',SystemModel,'/'];mkdir(figpath)
 datapath = ['../../DATA/',SystemModel,'/'];mkdir(datapath)
-% datapath = ['/Users/ekaiser/Documents/Academia/Papers/KaKuBr_SINDYc-MPC/DATA/'];
 addpath('../utils');
 
+%% Parameters
+Nvar = 5;                                   % Number of variables
+DATA_ENSEMBLE = 0;                          % Use data from single trajectory
+InputSignalTypeModel = 'prbs';              % Actuation type used to identify mod
+InputSignalTypeModel_Validation = 'prbs';
+ModelCollection = {'eDMDc','DMDc', 'DelayDMDc', 'partialSINDYc', 'SINDYc', 'NARX'};
+Nmodels = length(ModelCollection);
 %% Load Models
-Nvar = 5;
-% InputSignalTypeModel = 'sine2'; % prbs; chirp; noise; sine2; sphs; mixed
-% InputSignalTypeModel_Validation = 'sine3';
-
-InputSignalTypeModel = 'prbs'; % prbs; chirp; noise; sine2; sphs; mixed
-InputSignalTypeModel_Validation = 'prbs';%'sine2';
-
 % DelayDMDc
-ModelTypeDMDc = 'DMDc'; % actual
+ModelTypeDMDc = 'DMDc';
 load(fullfile(datapath,['EX_',SystemModel,'_SI_',ModelTypeDMDc,'_',InputSignalTypeModel,'.mat'])) % Model: DelayDMDc , DMDc
 Models.DelayDMDc = Model;
-
 
 % SINDYc
 load(fullfile(datapath,['EX_',SystemModel,'_SI_SINDYc','_',InputSignalTypeModel,'.mat'])) % Model
 Models.SINDYc = Model;
 
 % NARX
-% InputSignalTypeModel_NARX = 'sphs';
-InputSignalTypeModel_NARX = InputSignalTypeModel;
 % NARX_SUBSTRACT_MEAN = 1;
-load(fullfile(datapath,['EX_',SystemModel,'_SI_NARX','_',InputSignalTypeModel_NARX,'.mat'])) % Model
+load(fullfile(datapath,['EX_',SystemModel,'_SI_NARX','_',InputSignalTypeModel,'.mat'])) % Model
 Models.NARX = Model;
 
 %% ADDITIONAL MODELS
@@ -47,18 +41,15 @@ Models.partialSINDYc = Model;
 
 load(fullfile(datapath,['EX_',SystemModel,'_SI_eDMDc','_',InputSignalTypeModel,'.mat'])) % Model
 Models.eDMDc = Model;
+
 %% Get training data
 ONLY_TRAINING_LENGTH = 1;
-InputSignalType = InputSignalTypeModel;% prbs; chirp; noise; sine2; sphs; mixed
-% Ndelay = Models.DelayDMDc.Ndelay;
+InputSignalType = InputSignalTypeModel;
 getTrainingData
 u = u';
-%% Get validation data
-InputSignalType = InputSignalTypeModel_Validation; %'other';% prbs; chirp; noise; sine2; sphs; mixed
-% Ndelay = Models.DelayDMDc.Ndelay;
-% getValidationData
 
-%% FIGURE 1:  // Model comparison + Validation
+%% Get validation data + results
+InputSignalType = InputSignalTypeModel_Validation;
 tspanV =[tspan(end):dt:300];
 
 % Forcing
@@ -78,30 +69,17 @@ elseif strcmp(InputSignalTypeModel_Validation,'prbs')
     figure,plot(u_valid)
 end
 
-% to = t; clear t
-% Reference
-% x0 = x(1,1:Nvar);
+% Reference // True dynamics
 x0 = [10, 0.1, 0.1, 1, 0.1];
 [tA,xA] = ode45(@(t,x)HIVsys_ZURAKOWSKI(t,x,forcing(x,t)),tspanV,x0,options);   % true model
 
-% DelayDMDc / DMDc
-Ndelay = Models.DelayDMDc.Ndelay;
-if Ndelay == 1
-    %     x0      = [x(end,1:Nvar)];
-    Hunew   = [u(end),u_valid(1:end-1)];
-    [xB,tB] = lsim(Models.DelayDMDc.sys,Hunew,tspanV,[x0-[Models.DelayDMDc.xmean]]');
-elseif Ndelay > 1
-    %     x0      = [x(end-Ndelay+1,1:Nvar),x(end,1:Nvar)];
-    Hunew   = [ u(end-Ndelay+1:end),u_valid(1:end-Ndelay);
-        u(end),u_valid(1:end-1)];
-    [xB,tB] = lsim(Models.DelayDMDc.sys,Hunew,tspanV,[x0-[Models.DelayDMDc.xmean]]');
-    xB = xB(:,Nvar+1:2*Nvar); 
-    %xB = xB + repmat(xmean,[size(xB,1) 1]);
-end
+% DMDc
+Hunew   = [0,u_valid(1:end-1)];
+[xB,tB] = lsim(Models.DelayDMDc.sys,Hunew,tspanV,[x0-[Models.DelayDMDc.xmean]]');
 xB = xB + repmat(Models.DelayDMDc.xmean,[length(tB) 1]);
 
 % SINDYc
-[tC,xC]=ode45(@(t,x)sparseGalerkinControl(t,x,forcing(x,t),Models.SINDYc.Xi(:,1:Nvar),Models.SINDYc.polyorder,Models.SINDYc.usesine),tspanV,x0,options);  % approximate
+[tC,xC]=ode45(@(t,x)sparseGalerkinControl(t,x,forcing(x,t),Models.SINDYc.Xi(:,1:Nvar),Models.SINDYc.polyorder,Models.SINDYc.usesine),tspanV,x0,options);
 
 % NARX
 Udummy = [u(end),u_valid(1:end)];
@@ -121,16 +99,13 @@ if Models.NARX.TRANSFORM_LOG
     xD = exp(xD);
 end
 xD = [x0;xD(1:end-1,:)];
-xD(2:end,:) = xD(2:end,:) + repmat(NARX_xmean',[size(xD,1)-1 1]);
-xD(2:end,:) = xD(2:end,:).*repmat(NARX_xnorm',[size(xD,1)-1 1]);
+xD(2:end,:) = xD(2:end,:) + repmat(NARX_xmean',[size(xD,1)-1 1]); % mean might be zero and has no effect
 
-%%
 % partialSINDYc
-options = odeset('RelTol',1e-14,'AbsTol',1e-14*ones(1,length(Models.partialSINDYc.SelectVars)));
+options = odeset('RelTol',1e-14,'AbsTol',1e-14*ones(1,length(Models.partialSINDYc.SelectVars))); % different number of variables
 [tE,xE]=ode45(@(t,x)sparseGalerkinControl(t,x,forcing(x,t),Models.partialSINDYc.Xi(:,1:end-1),Models.partialSINDYc.polyorder,Models.partialSINDYc.usesine),tspanV,x0(Models.partialSINDYc.SelectVars),options);  % approximate
-options = odeset('RelTol',1e-14,'AbsTol',1e-14*ones(1,n));
+options = odeset('RelTol',1e-14,'AbsTol',1e-14*ones(1,n)); % change back
 
-%%
 % DelayDMDc / DMDc
 Ndelay = Models.DelayDMDc2.Ndelay;
 if Ndelay == 1
@@ -144,7 +119,8 @@ elseif Ndelay > 1
 end
 xF = xF + repmat(Models.DelayDMDc2.xmean,[length(tF) 1]);
 xF = [nan(size(xA(1:Ndelay-1,:)));xF]; tF = [tA(1:Ndelay-1);tF];
-%% eDMDc
+
+% eDMDc
 Y0 = poolData([x0-Models.eDMDc.xmean],Nvar,Models.eDMDc.polyorder,Models.eDMDc.usesine)';
 Hunew   = [u(end),u_valid(1:end-1)];
 
@@ -153,7 +129,7 @@ xG = xG(:,1:Nvar);
 xG = xG + repmat(Models.eDMDc.xmean,[length(tG) 1]);
 
 
-%% Show results
+%% Show validation results (only first 3 variables as partialSINDYc uses only those)
 clear ph
 h = figure;
 subplot(3,2,1), box on,
@@ -211,7 +187,7 @@ xlabel('Time','FontSize',13)
 % ylabel('x_3','FontSize',13)
 % set(gca,'FontSize',13)
 % xlabel('Time','FontSize',13)
-% 
+%
 % subplot(3,2,5), box on
 % plot([tB(1) tB(1)],[1e-10 8],'--k'), hold on
 % ph(1) = plot(t,x(:,5),'Color',[.4 .4 .4],'LineWidth',1.5);
@@ -233,63 +209,42 @@ pos = get(h,'Position');
 set(h,'PaperPositionMode','Auto','PaperSize',[pos(3), pos(4)])
 print(h,'-painters','-depsc2',  '-loose','-cmyk', [figpath,'EX_',SystemModel,'_SI_Comparison_Validation_',InputSignalTypeModel,'_',InputSignalType,'.eps'],'-r0');
 
-%% Show results
-% tplot = (tA-tA(1))/7;
-% for i = 1:3
-% clear ph
-% h = figure; box on, hold on, grid off
-% plot(tplot,xA(:,i),'','Color',[0 0 0],'LineWidth',2);
-% plot(tplot,xB(:,i),'r-','LineWidth',2);
-% plot(tplot,xC(:,i),'g--','LineWidth',2);
-% plot(tplot,xD(:,i),'-.','Color',[0.7,0.7,1],'LineWidth',2);
-% axis tight
-% xlabel('Time [weeks]'), ylabel(['x',num2str(i)])
-% set(gca,'LineWidth',1, 'FontSize',16)
-% set(gcf,'Position',[100 100 400 110])
-% set(gcf,'PaperPositionMode','auto')
-% print('-depsc2', '-loose','-cmyk', [figpath,'EX_',SystemModel,'_SI_Comparison_Validation_',InputSignalTypeModel,'_',InputSignalType,'_x',num2str(i),'.eps']);
-% end
+%% Show results // different plots
 
 ccols = [0.9,0.5,.5; 1,0,0; 0.5,0.15,0.15; 0.3,0.5,0.3; 0,1,0; 0.7,0.7,1];
 lstyles = {'-','-','-','--','--','-.'};
 new_order = [2,3,1,5,4,6];
-tplot = (tA-tA(1))/7;
+tplot = (tA-tA(1))/7; % shift and rescale time axis (weekly, starting at 0)
 ylims = [-2,14;
-         -3,6;
-         -15,45;
-         0,1;
-         -2,5];
-for i = 1:5
-clear ph
-h = figure; box on, hold on, grid off
-plot(tplot,xA(:,i),'-','Color',[0 0 0],'LineWidth',1.5);
-plot(tplot,xB(:,i),'Color',ccols(2,:),'LineWidth',1.5,'LineStyle',lstyles{2});
-plot(tplot,xC(:,i),'Color',ccols(5,:),'LineWidth',1.5,'LineStyle',lstyles{5});
-plot(tplot,xD(:,i),'Color',ccols(6,:),'LineWidth',1.5,'LineStyle',lstyles{6});
-if i<4
-    plot(tplot,xE(:,i),'Color',ccols(4,:),'LineWidth',1.5,'LineStyle',lstyles{4});
-end
-plot(tplot,xF(:,i),'Color',ccols(3,:),'LineWidth',1.5,'LineStyle',lstyles{3});
-plot(tplot,xG(:,i),'Color',ccols(1,:),'LineWidth',1.5,'LineStyle',lstyles{1});
-axis tight
-ylim(ylims(i,:))
-xlabel('Time [weeks]'), ylabel(['x',num2str(i)])
-set(gca,'LineWidth',1, 'FontSize',16)
-set(gcf,'Position',[100 100 400 130]) %110
-set(gcf,'PaperPositionMode','auto')
-print('-depsc2', '-loose','-cmyk', [figpath,'EX_',SystemModel,'_SI_Comparison_Validation_',InputSignalTypeModel,'_',InputSignalType,'_x',num2str(i),'_COMP-ALL.eps']);
+    -3,6;
+    -15,45;
+    0,1;
+    -2,5];
+for i = 1:Nvar
+    clear ph
+    h = figure; box on, hold on, grid off
+    plot(tplot,xA(:,i),'-','Color',[0 0 0],'LineWidth',1.5);
+    plot(tplot,xB(:,i),'Color',ccols(2,:),'LineWidth',1.5,'LineStyle',lstyles{2});
+    plot(tplot,xC(:,i),'Color',ccols(5,:),'LineWidth',1.5,'LineStyle',lstyles{5});
+    plot(tplot,xD(:,i),'Color',ccols(6,:),'LineWidth',1.5,'LineStyle',lstyles{6});
+    if i<4
+        plot(tplot,xE(:,i),'Color',ccols(4,:),'LineWidth',1.5,'LineStyle',lstyles{4});
+    end
+    plot(tplot,xF(:,i),'Color',ccols(3,:),'LineWidth',1.5,'LineStyle',lstyles{3});
+    plot(tplot,xG(:,i),'Color',ccols(1,:),'LineWidth',1.5,'LineStyle',lstyles{1});
+    axis tight
+    ylim(ylims(i,:))
+    xlabel('Time [weeks]'), ylabel(['x',num2str(i)])
+    set(gca,'LineWidth',1, 'FontSize',16)
+    set(gcf,'Position',[100 100 400 130]) %110
+    set(gcf,'PaperPositionMode','auto')
+    print('-depsc2', '-loose','-cmyk', [figpath,'EX_',SystemModel,'_SI_Comparison_Validation_',InputSignalTypeModel,'_',InputSignalType,'_x',num2str(i),'_COMP-ALL.eps']);
 end
 
-%% Error
+%% Compute and plot Error
 errValid = zeros(Nmodels+1,length(tplot));
 
 errValid(7,:) = sum(1/3*((xA(:,1:3)-xA(:,1:3))./repmat(max(xA(:,1:3),[],1),[length(tplot) 1])).^2,2);
-% errValid(2,:) = sum(1/3*(xB(:,1:3)-xA(:,1:3)).^2./repmat(max(xA(:,1:3),[],1),[length(tplot) 1]),2); %DMDc
-% errValid(5,:) = sum(1/3*(xC(:,1:3)-xA(:,1:3)).^2./repmat(max(xA(:,1:3),[],1),[length(tplot) 1]),2); %SINDYc
-% errValid(6,:) = sum(1/3*(xD(:,1:3)-xA(:,1:3)).^2./repmat(max(xA(:,1:3),[],1),[length(tplot) 1]),2); %NN
-% errValid(4,:) = sum(1/3*(xE(:,1:3)-xA(:,1:3)).^2./repmat(max(xA(:,1:3),[],1),[length(tplot) 1]),2); %partialDSINDYc
-% errValid(3,:) = sum(1/3*(xF(:,1:3)-xA(:,1:3)).^2./repmat(max(xA(:,1:3),[],1),[length(tplot) 1]),2); % Delay DMDc
-% errValid(1,:) = sum(1/3*(xG(:,1:3)-xA(:,1:3)).^2./repmat(max(xA(:,1:3),[],1),[length(tplot) 1]),2); %eDMDc
 errValid(2,:) = sum(1/3*((xB(:,1:3)-xA(:,1:3))./repmat(max(xA(:,1:3),[],1),[length(tplot) 1])).^2,2); %DMDc
 errValid(5,:) = sum(1/3*((xC(:,1:3)-xA(:,1:3))./repmat(max(xA(:,1:3),[],1),[length(tplot) 1])).^2,2); %SINDYc
 errValid(6,:) = sum(1/3*((xD(:,1:3)-xA(:,1:3))./repmat(max(xA(:,1:3),[],1),[length(tplot) 1])).^2,2); %NN
@@ -301,8 +256,7 @@ errValid(1,:) = sum(1/3*((xG(:,1:3)-xA(:,1:3))./repmat(max(xA(:,1:3),[],1),[leng
 clear ph
 h = figure; box on, grid off
 for i = 1:size(errValid,1)-1
-% plot(tplot,xA(:,i),'-','Color',[0 0 0],'LineWidth',2);
-semilogy(tplot,errValid(new_order(i),:),'Color',ccols(new_order(i),:),'LineWidth',1.5,'LineStyle',lstyles{new_order(i)}); hold on
+    semilogy(tplot,errValid(new_order(i),:),'Color',ccols(new_order(i),:),'LineWidth',1.5,'LineStyle',lstyles{new_order(i)}); hold on
 end
 axis tight
 ylim([1e-15 1e5])
@@ -312,7 +266,7 @@ set(gcf,'Position',[100 100 400 140]) %110
 set(gcf,'PaperPositionMode','auto')
 print('-depsc2', '-loose','-cmyk', [figpath,'EX_',SystemModel,'_SI_Comparison_ValidationError_',InputSignalTypeModel,'_',InputSignalType,'_x',num2str(i),'_COMP-ALL.eps']);
 
-%%
+%% Show applied actuation input
 clear ph
 h = figure; box on, hold on, grid off
 plot(tplot,u_valid,'','Color',[0 0 0],'LineWidth',1.5);
@@ -323,23 +277,22 @@ set(gcf,'Position',[100 100 400 100])%80
 set(gcf,'PaperPositionMode','auto')
 print('-depsc2', '-loose','-cmyk', [figpath,'EX_',SystemModel,'_SI_Comparison_Validation_',InputSignalTypeModel,'_',InputSignalType,'_u.eps']);
 
-%% Actuation signal
+%% Actuation signal over training and validation stage
 t_valid = tspanV;
 clear ph
 figure,box on, hold on,
 ccolors = get(gca,'colororder');
-plot([tA(1),tA(1)],[0 1],':','Color',[0.4,0.4,0.4],'LineWidth',1.5)
+plot([tA(1),tA(1)],[0 1],':','Color',[0.4,0.4,0.4],'LineWidth',4)
 plot(t,u,'-k','LineWidth',1);
 plot(t_valid,u_valid,'-k','LineWidth',1);
 grid off
-% ylim([min([u u_valid])+0.05*min([u u_valid]) max([u u_valid])+0.05*max([u u_valid])])
 xlim([0 t_valid(end)])
 xlabel('Time')
 ylabel('Input')
 set(gca,'LineWidth',1, 'FontSize',14)
 set(gcf,'Position',[100 100 300 200])
 set(gcf,'PaperPositionMode','auto')
-print('-depsc2', '-loose','-cmyk', [figpath,'EX_',SystemModel,'_SI_Comparison_Validation_',InputSignalTypeModel,'_',InputSignalType,'_Actuation.eps']);
+print('-depsc2', '-loose','-cmyk', [figpath,'EX_',SystemModel,'_SI_Comparison_Validation_',InputSignalTypeModel,'_',InputSignalType,'_u_train-valid.eps']);
 
 
 %% Truth
@@ -373,14 +326,15 @@ end
 options = optimoptions('fmincon','Algorithm','sqp','Display','none', ...
     'MaxIterations',100);
 Nweeks = 100;
-Duration = Nweeks*7;                 % Run for 'Duration' time units
-Ton = tA(end)+1;                         % Time units when control is turned on
-x0n = [10, 0.1, 0.1, 0.1, 0.1]'; % Initial condition
-Ts  = 1/24;             % Sampling time [1/hr]
-Tcontrol = tA(end);
+DaysPerWeek  = 7;
+Duration = Nweeks*DaysPerWeek;                 % Run for 'Duration' time units
+Ton = tA(end)+1;                     % Time units when control is turned on
+x0n = [10, 0.1, 0.1, 0.1, 0.1]';     % Initial condition
+Ts = 1/12;                           % Sampling time [0.5/hr]
+Tcontrol = tA(end);                  % Turn control on at time
 getMPCparams
 
-% Reference state, which shall be achieved
+% Reference state, which shall be approached
 xref = zeros(1,5);
 xref(2) = ((c2*(lambda1-d*q)-b2*alpha1) - sqrt((c2*(lambda1-d*q)-b2*alpha1)^2 - 4*alpha1*c2*q*d*b2))/(2*alpha1*c2*q);
 xref(1) = lambda1/(d+alpha1*xref(2));
@@ -389,20 +343,17 @@ xref(5) = (xref(2)*c2*(alpha1*q-a) + b2*alpha1)/(c2*p2*xref(2));
 xref(3) = h*xref(5)/(c2*q*xref(2));
 
 
-% Parameters Models
-% ModelCollection = {ModelTypeDMDc, 'SINDYc', 'NARX'};
+% Parameters Models: Select models for MPC
 ModelCollection = {'eDMDc','DMDc', 'DelayDMDc', 'partialSINDYc', 'SINDYc', 'NARX'};
 Nmodels = length(ModelCollection);
 
 clear Results
 Results(1:Nmodels) = struct('x',[], 'u', [], 't', [], 'xref', [], 'J', [], 'elapsed_time', []);
 
-Ts = 1/12;%Models.SINDYc.dt; %dt;
-
-%%
+%% RUN MPC over selected models
 clear pest
-for iM = Nmodels
-    select_model = ModelCollection{iM}; % DelayDMDc; DMDc; NARX ; SINDYc
+for iM = 1:1%Nmodels
+    select_model = ModelCollection{iM};
     
     % Prepare variables
     Nt = (Duration/Ts)+1;
@@ -429,8 +380,7 @@ for iM = Nmodels
             pest.sys    = Models.DelayDMDc2.sys;
             pest.xmean  = Models.DelayDMDc2.xmean';
             pest.udelay = zeros(1,Models.DelayDMDc2.Ndelay);
-%             pest.xdelay = zeros(Nvar,Ndelay);%[x(end-Ndelay+1,1:2)]';
-            pest.xdelay = zeros(Nvar*Models.DelayDMDc2.Ndelay,1); % x0
+            pest.xdelay = zeros(Nvar*Models.DelayDMDc2.Ndelay,1);
             pest.Nxlim  = size(x,1);
             pest.Ndelay = Models.DelayDMDc2.Ndelay;
         case 'DMDc'
@@ -439,16 +389,16 @@ for iM = Nmodels
             pest.xmean = Models.DelayDMDc.xmean';
             pest.Nxlim = size(x,1);
         case 'SINDYc'
-            pest.ahat = Models.SINDYc.Xi(:,1:Nvar); %Xi0(:,1:Nvar);%
+            pest.ahat = Models.SINDYc.Xi(:,1:Nvar); %Xi0(:,1:Nvar); % Change to execute true model
             pest.polyorder = Models.SINDYc.polyorder;
             pest.usesine = Models.SINDYc.usesine;
             pest.dt = Models.SINDYc.dt;
             pest.SelectVars = 1:Nvar;
         case 'partialSINDYc'
-            pest.ahat = Models.partialSINDYc.Xi(:,1:end-1); 
+            pest.ahat = Models.partialSINDYc.Xi(:,1:end-1);
             pest.polyorder = Models.partialSINDYc.polyorder;
             pest.usesine = Models.partialSINDYc.usesine;
-            pest.dt = Models.partialSINDYc.dt;  
+            pest.dt = Models.partialSINDYc.dt;
             pest.SelectVars = Models.partialSINDYc.SelectVars;
         case 'NARX'
             pest.net = Models.NARX.net;
@@ -464,41 +414,41 @@ for iM = Nmodels
     % Start simulation
     fprintf('Simulation started.  It might take a while...\n')
     tic
-    for ct = 1:(Duration/Ts)
-        if (ct*Ts+Tcontrol)>Ton
-        if mod(ct*Ts,7) == 0
-            % NMPC with full-state feedback
-            COSTFUN = @(u) ObjectiveFCN_models(u,xhat,N,Nu,xref,uHistory(:,ct),pest,diag(Q),R,Ru,select_model);
-            CONSFUN = @(u) ConstraintFCN_models(u,uHistory(:,ct),xhat,N,LBo,UBo,LBdu,UBdu,pest,select_model);
-            uopt = fmincon(COSTFUN,uopt,[],[],[],[],LB,UB,CONSFUN,options);
+    for ct = 1:(Duration/Ts) % Iterate over control stage
+        if (ct*Ts+Tcontrol)>Ton  % Turn control on at a certain time
+            if mod(ct*Ts,7) == 0  % Update (Optimize) control input once a week
+                % Nonlinear MPC optimization
+                COSTFUN = @(u) ObjectiveFCN_models(u,xhat,N,Nu,xref,uHistory(:,ct),pest,diag(Q),R,Ru,select_model);
+                CONSFUN = @(u) ConstraintFCN_models(u,uHistory(:,ct),xhat,N,LBo,UBo,LBdu,UBdu,pest,select_model);
+                uopt = fmincon(COSTFUN,uopt,[],[],[],[],LB,UB,CONSFUN,options);
+            end
         end
-        end
+        
         % Integrate system
-        xhat = rk4u(@HIVsys_ZURAKOWSKI,xhat,uopt(1),Ts/2,2,[],0); %10, 7000: weekly
+        xhat = rk4u(@HIVsys_ZURAKOWSKI,xhat,uopt(1),Ts/2,2,[],0); % use half the timestep and keep control constant for smaller error
         xHistory(:,ct+1) = xhat;
         uHistory(:,ct+1) = uopt(1);
         tHistory(:,ct+1) = ct*Ts+Tcontrol;
         rHistory(:,ct+1) = xref;
         
-        if strcmp(select_model,'DelayDMDc') && ((ct*Ts+Tcontrol)>Ton-Ts)
+        if strcmp(select_model,'DelayDMDc') && ((ct*Ts+Tcontrol)>Ton-Ts) % Update history of states and inputs in model parameters
             pest.dt     = Models.DelayDMDc2.dt;
             pest.sys    = Models.DelayDMDc2.sys;
             pest.xmean  = Models.DelayDMDc2.xmean';
             pest.udelay = uHistory(:,(ct+1)-Models.DelayDMDc2.Ndelay+1:(ct+1));
-            H0 = xHistory(:,(ct+1)-Models.DelayDMDc2.Ndelay+1:(ct+1))';%[x(end-Ndelay+1,:)]';
+            H0 = xHistory(:,(ct+1)-Models.DelayDMDc2.Ndelay+1:(ct+1))';
             pest.xdelay = getHankelMatrix_MV(H0-repmat(Models.DelayDMDc2.xmean,[pest.Ndelay 1]),pest.Ndelay);
-%             pest.Nxlim  = size(x,1);    
         end
         
         if mod(ct,1000) == 0
             disp(['PROGRESS: ',num2str(100*ct/(Duration/Ts)),'%'])
         end
     end
-    
-    fprintf('Simulation finished!\n')
-    %
     tElapsed = toc
+    fprintf('Simulation finished!\n')
     
+    
+    % Collect results
     Results(iM).eval_time = tElapsed;
     Results(iM).xref = rHistory;
     Results(iM).x = xHistory;
@@ -506,37 +456,31 @@ for iM = Nmodels
     Results(iM).t = tHistory;
     Results(iM).J = evalObjectiveFCN_HIV(Results(iM).u,Results(iM).x,Results(iM).xref,diag(Q),R,Ru);
     Results(iM).elapsed_time = tElapsed;
-   
-    VIZ_SI_Validation_MPC
+    
 end
 
-%N=10: 120.9128, 96.8967, 2.1755e+03
-%%
 
-
-
-% if iM==Nmodels
-%     VIZ_SI_Validation_MPC_ensemble(ct,t_valid,u_valid,xHistory,tHistory,uHistory,Results,t,tA,xA,xB,xC,xD,select_model,SystemModel,figpath,N,InputSignalTypeModel,Nmodels,ModelCollection)
-% end
-%% Unforced
+%% Run unforced system
 [tU,xU] = ode45(@(t,x)HIVsys_ZURAKOWSKI(t,x,0,[]),tHistory,x0n,options);   % true model
-%%
-xnormfinal = max(Results(5).x(:,1:ct),[],2);
+
+%% Normalize states and rescale time [days --> weeks]
+xnormfinal = max(Results(1).x(:,1:ct),[],2);
 tnorm = 7;
-%%
-for iM = 1:Nmodels
-clear ph
-figure;box on,hold on
-ccolors = get(gca,'colororder');
-plot(tHistory(1:ct)/tnorm,xref(1)*ones(length(tHistory(1:ct)),1)./xnormfinal(1),'--','Color',ccolors(1,:),'LineWidth',1), hold on
-plot(tHistory(1:ct)/tnorm,xref(2)*ones(length(tHistory(1:ct)),1)./xnormfinal(2),'--','Color',ccolors(2,:),'LineWidth',1)
-plot(tHistory(1:ct)/tnorm,xref(3)*ones(length(tHistory(1:ct)),1)./xnormfinal(3),'--','Color',ccolors(3,:),'LineWidth',1)
-ph(1) = plot(Results(iM).t(1:ct)/tnorm,Results(iM).x(1,1:ct)./xnormfinal(1),'-','Color',ccolors(1,:),'LineWidth',1.5);
-ph(2) = plot(Results(iM).t(1:ct)/tnorm,Results(iM).x(2,1:ct)./xnormfinal(2),'-','Color',ccolors(2,:),'LineWidth',1.5);
-ph(3) = plot(Results(iM).t(1:ct)/tnorm,Results(iM).x(3,1:ct)./xnormfinal(3),'-','Color',ccolors(3,:),'LineWidth',1.5);
-ph(4) = plot(Results(iM).t(1:ct)/tnorm,Results(iM).u(1:ct),'-k','LineWidth',1.5);
-ylim([0 1])
-legend(ph,'x1','x2','x3','u')
+
+%% Show results
+for iM = 1:1:Nmodels
+    clear ph
+    figure;box on,hold on
+    ccolors = get(gca,'colororder');
+    plot(tHistory(1:ct)/tnorm,xref(1)*ones(length(tHistory(1:ct)),1)./xnormfinal(1),'--','Color',ccolors(1,:),'LineWidth',1), hold on
+    plot(tHistory(1:ct)/tnorm,xref(2)*ones(length(tHistory(1:ct)),1)./xnormfinal(2),'--','Color',ccolors(2,:),'LineWidth',1)
+    plot(tHistory(1:ct)/tnorm,xref(3)*ones(length(tHistory(1:ct)),1)./xnormfinal(3),'--','Color',ccolors(3,:),'LineWidth',1)
+    ph(1) = plot(Results(iM).t(1:ct)/tnorm,Results(iM).x(1,1:ct)./xnormfinal(1),'-','Color',ccolors(1,:),'LineWidth',1.5);
+    ph(2) = plot(Results(iM).t(1:ct)/tnorm,Results(iM).x(2,1:ct)./xnormfinal(2),'-','Color',ccolors(2,:),'LineWidth',1.5);
+    ph(3) = plot(Results(iM).t(1:ct)/tnorm,Results(iM).x(3,1:ct)./xnormfinal(3),'-','Color',ccolors(3,:),'LineWidth',1.5);
+    ph(4) = plot(Results(iM).t(1:ct)/tnorm,Results(iM).u(1:ct),'-k','LineWidth',1.5);
+    ylim([0 1])
+    legend(ph,'x1','x2','x3','u')
 end
 
 clear ph
@@ -551,71 +495,24 @@ ph(3) = plot(tU/7,xU(:,3)./xnormfinal(3),'-','Color',ccolors(3,:),'LineWidth',1.
 ylim([0 1])
 legend(ph,'x1','x2','x3')
 
-%%
-% figure,hold on
-% plot([1 length(Results(1).J); 1 length(Results(1).J); 1 length(Results(1).J)]',[xref1,xref1]','-k')
-% plot(Results(1).x','-'), plot(Results(2).x','--')
-%
-% figure,plot(cumsum(Results(1).J'),'-'), hold on, plot(cumsum(Results(2).J'),'--')
-% figure,plot(Results(1).u','-'), hold on, plot(Results(2).u','--')
-
-%%
-
-% iM = 1; [J1,Js1,Ju1] = evalObjectiveFCN(Results(iM).u,Results(iM).x,Results(iM).xref,diag(Q),R,Ru);
-%
-% iM = 2; [J2,Js2,Ju2] = evalObjectiveFCN(Results(iM).u,Results(iM).x,Results(iM).xref,diag(Q),R,Ru);
-%
-% figure,
-% subplot(3,1,1), plot(cumsum(J1),'-k'), hold on, plot(cumsum(J2),'--r')
-% subplot(3,1,2), plot(cumsum(Js1),'-k'), hold on, plot(cumsum(Js2),'--r')
-% subplot(3,1,3), plot(cumsum(Ju1),'-k'), hold on, plot(cumsum(Ju2),'--r')
-% return
-% figure,plot(cumsum(Results(1).J'),'-'), hold on, plot(cumsum(Results(2).J'),'--')
-% plot(cumsum(J'),'-.k')
-%
-% figure; hold on, grid on
-% plot(Results(1).x'-Results(iM).xref','-k'), plot(Results(2).x'-Results(iM).xref','--r')
-%
-% figure,plot(cumsum(Results(1).J'),'-k'), hold on, plot(cumsum(Results(2).J'),'--r')
-% plot(cumsum(Js'),'-.g')
-%
-% figure,plot((Results(1).J'),'-k'), hold on, plot((Results(2).J'),'--r')
-% plot((Js'),'-.g')
-% return
-% iM = 2; [J,Js,Ju] = evalObjectiveFCN(Results(iM).u,Results(iM).x,Results(iM).xref,diag(Q),R,Ru);
-
-
-
 %% Show cost
 % ModelCollection = {'eDMDc','DMDc', 'DelayDMDc', 'partialSINDYc', 'SINDYc', 'NARX'};
 ccols = [0.9,0.5,.5; 1,0,0; 0.5,0.15,0.15; 0.3,0.5,0.3; 0,1,0; 0.7,0.7,1];
 lstyles = {'-','-','-','--','--','-.'};
-new_order = [2,3,1,5,4,6];
+new_order = [2,3,1,5,4,6]; % Show model results in different order
 clear ph
 figure, hold on, box on
-% ph(2) = plot(Results(1).t./7,cumsum(Results(2).J),'-r','LineWidth',2);
-% ph(5) = plot(Results(1).t./7,cumsum(Results(5).J),'--g','LineWidth',2);
-% ph(6) = plot(Results(1).t./7,cumsum(Results(6).J),'-.','Color',[0.7,0.7,1],'LineWidth',2);
-% 
-% ph(1) = plot(Results(1).t./7,cumsum(Results(1).J),'-','Color',[0.9,0.5,.5],'LineWidth',2);
-% ph(3) = plot(Results(1).t./7,cumsum(Results(3).J),'-','Color',[0.5,0.15,0.15],'LineWidth',2);
-% ph(4) = plot(Results(1).t./7,cumsum(Results(4).J),'--','Color',[0.3,0.5,0.3],'LineWidth',2);
-
 for iM = 1:Nmodels
     ph(iM) = plot(Results(1).t./7,cumsum(Results(new_order(iM)).J),'-','Color',ccols(new_order(iM),:), ...
         'LineWidth',2,'LineStyle',lstyles{new_order(iM)});
 end
 
 xlim([Results(1).t(1)./7 Results(1).t(end)./7])
-% ylim([0 4.5])
 ylabel('Cost','FontSize',14)
 xlabel('Time [weeks]','FontSize',14)
-% set(gca,'yscale','log')
 set(gca,'LineWidth',1, 'FontSize',14)
-% set(gcf,'Position',[100 100 300 200])
 set(gcf,'Position',[100 100 300 300])
 set(gcf,'PaperPositionMode','auto')
-
 print('-depsc2', '-loose','-cmyk', [figpath,'EX_',SystemModel,'_MPC_Comparison_',InputSignalTypeModel,'_',InputSignalType,'_Cost','_N_',num2str(N),'_COMP-ALL.eps']);
 
 l1=legend(ph,ModelCollection(new_order));
@@ -632,7 +529,6 @@ print('-depsc2', '-loose','-cmyk', [figpath,'EX_',SystemModel,'_MPC_Comparison_'
 
 
 %% Show x1-3 for each model
-% ccols = [1 0 0; 0.7,0.7,1; 0 1 0];
 ccols = zeros(Nmodels,3);
 
 for ivar = Nmodels
@@ -653,122 +549,73 @@ for ivar = Nmodels
     xlabel('Time [weeks]','FontSize',14)
     set(gca,'LineWidth',1, 'FontSize',14)
     set(gcf,'Position',[100 100 300 300])
-    %     set(gcf,'Position',[100 100 300 200])
     set(gcf,'PaperPositionMode','auto')
-    print('-depsc2', '-loose','-cmyk', [figpath,'EX_',SystemModel,'_MPC_Comparison_',InputSignalTypeModel,'_',InputSignalType,'_Cost','_N_',num2str(N),'_',ModelCollection{ivar},'_COMP-ALL.eps']);  
+    print('-depsc2', '-loose','-cmyk', [figpath,'EX_',SystemModel,'_MPC_Comparison_',InputSignalTypeModel,'_',InputSignalType,'_Cost','_N_',num2str(N),'_',ModelCollection{ivar},'_COMP-ALL.eps']);
     
 end
 
-    axis off
-    l1=legend(ph,'-x1--','-x2--','-x3--','-Ref--');
-    set(l1,'Location','SouthEast','Orientation','horizontal','FontSize',14)
-    l1.Position = [l1.Position(1)+0.1 l1.Position(2)+0.1 l1.Position(3:4)];
-    xlim([Results(1).t(1) Results(1).t(end)])
-    % ylim([10 1500])
-    ylabel('xi','FontSize',14)
-    xlabel('Time','FontSize',14)
-    set(gca,'LineWidth',1, 'FontSize',14)
-    set(gcf,'Position',[100 100 300 50])
-    set(gcf,'PaperPositionMode','auto')
-    print('-depsc2', '-loose','-cmyk', [figpath,'EX_',SystemModel,'_MPC_Comparison_',InputSignalTypeModel,'_',InputSignalType,'_Cost','_N_',num2str(N),'_Model_legend_COMP-ALL.eps']);
-
-    %% No control
-    
-    ylimits = [0 11; 0 9; 0 1500];
-    clear ph hh
-    figure, hold on, box on
-%     hh = area(Results(1).t./7,Results(ivar).u,'LineStyle','none');
-%     hh.FaceColor = 0.8*ones(1,3);
-    ph(4) = plot(Results(1).t(2:end)./7,(Results(ivar).xref(1,2:end))./xnormfinal(1),'-k','LineWidth',1);
-    ph(5) = plot(Results(1).t(2:end)./7,(Results(ivar).xref(2,2:end))./xnormfinal(2),':k','LineWidth',1);
-    ph(6) = plot(Results(1).t(2:end)./7,(Results(ivar).xref(3,2:end))./xnormfinal(3),'-.k','LineWidth',1);
-    ph(1) = plot(Results(1).t./7,(xU(:,1))./xnormfinal(1),'-','Color','k','LineWidth',2);
-    ph(2) = plot(Results(1).t./7,(xU(:,2))./xnormfinal(2),':','Color','k','LineWidth',2);
-    ph(3) = plot(Results(1).t./7,(xU(:,3))./xnormfinal(3),'-.','Color','k','LineWidth',2);
-    ylim([0 1.2])
-    xlim([min(Results(1).t./7) max(Results(1).t./7)])
-    ylabel('xi','FontSize',14)
-    xlabel('Time [weeks]','FontSize',14)
-    set(gca,'LineWidth',1, 'FontSize',14)
-    set(gcf,'Position',[100 100 300 300])
-    %     set(gcf,'Position',[100 100 300 200])
-    set(gcf,'PaperPositionMode','auto')
-    print('-depsc2', '-loose','-cmyk', [figpath,'EX_',SystemModel,'_MPC_Comparison_',InputSignalTypeModel,'_',InputSignalType,'_Cost','_N_',num2str(N),'_UNFORCED','_COMP-ALL.eps']);  
-  
-    %%
-    set(gcf,'Position',[100 100 300 200])
-    legend off
-    axis on
-    xlim([Results(1).t(end) Results(1).t(end)+1])
-    ylim([10000 20000])
-    l1=legend(ph,'-x1--','-x2--','-x3--','-Ref--');
-    set(l1,'Location','SouthEast','Orientation','vertical','FontSize',14)
-%     l1.Position = [l1.Position(1)+0.1 l1.Position(2)+0.1 l1.Position(3:4)];
-    axis off
-    set(gca,'LineWidth',1, 'FontSize',14)
-    set(gcf,'Position',[100 100 120 150])
-    set(gcf,'PaperPositionMode','auto')
-    print('-depsc2', '-loose','-cmyk', [figpath,'EX_',SystemModel,'_MPC_Comparison_',InputSignalTypeModel,'_',InputSignalType,'_Cost','_N_',num2str(N),'_Model_legend_COMP-ALL_short.eps']);
-
-    %%
-    set(gcf,'Position',[100 100 300 200])
-    legend off
-    axis on
-    xlim([Results(1).t(end) Results(1).t(end)+1])
-    ylim([10000 20000])
-    l1=legend(ph,'-x1--','-x2--','-x3--','-Ref1--','-Ref2--','-Ref3--');
-    set(l1,'Location','SouthEast','Orientation','vertical','FontSize',14)
-%     l1.Position = [l1.Position(1)+0.1 l1.Position(2)+0.1 l1.Position(3:4)];
-    axis off
-    set(gca,'LineWidth',1, 'FontSize',14)
-    set(gcf,'Position',[100 100 120 160])
-    set(gcf,'PaperPositionMode','auto')
-    print('-depsc2', '-loose','-cmyk', [figpath,'EX_',SystemModel,'_MPC_Comparison_',InputSignalTypeModel,'_',InputSignalType,'_Cost','_N_',num2str(N),'_Model_legend_COMP-ALL_long.eps']);
-    
-%% Show control stage separate
-% clear ph
-% figure, hold on, box on
-% ph(4) = plot(Results(1).t(2:end),(Results(1).xref(1,2:end)),'-k','LineWidth',2);
-% ph(1) = plot(Results(1).t,(Results(1).x(1,:)),'-r','LineWidth',2);
-% ph(3) = plot(Results(1).t,(Results(3).x(1,:)),'-.','Color',[0.7,0.7,1],'LineWidth',2);
-% ph(2) = plot(Results(1).t,(Results(2).x(1,:)),'--g','LineWidth',2);
-%
-% l1=legend(ph,ModelCollection,'Ref');
-% set(l1,'Location','NorthEast')
-% xlim([Results(1).t(1) Results(1).t(end)])
-% % ylim([-0.25 .25])
-% ylabel('x1','FontSize',14)
-% xlabel('Time','FontSize',14)
-% % set(gca,'yscale','log')
-% set(gca,'LineWidth',1, 'FontSize',14)
-% set(gcf,'Position',[100 100 300 200])
-% set(gcf,'PaperPositionMode','auto')
-
-return
-% print('-depsc2', '-loose','-cmyk', [figpath,'EX_',SystemModel,'_SI_Comparison_',InputSignalTypeModel,'_',InputSignalType,'_x1','_N_',num2str(N),'.eps']);
-
-
-%%
-clear ph
-figure, hold on, box on
-ph(1) = plot(Results(1).t,(Results(1).u(:)),'-r','LineWidth',2);
-ph(3) = plot(Results(1).t,(Results(3).u(:)),'-.','Color',[0.7,0.7,1],'LineWidth',2);
-ph(2) = plot(Results(1).t,(Results(2).u(:)),'--g','LineWidth',2);
-
-l1=legend(ph,ModelCollection,'Ref');
-set(l1,'Location','NorthEast')
+axis off
+l1=legend(ph,'-x1--','-x2--','-x3--','-Ref--');
+set(l1,'Location','SouthEast','Orientation','horizontal','FontSize',14)
+l1.Position = [l1.Position(1)+0.1 l1.Position(2)+0.1 l1.Position(3:4)];
 xlim([Results(1).t(1) Results(1).t(end)])
-% ylim([-0.25 .25])
-ylabel('Input','FontSize',14)
+ylabel('xi','FontSize',14)
 xlabel('Time','FontSize',14)
-% set(gca,'yscale','log')
 set(gca,'LineWidth',1, 'FontSize',14)
-set(gcf,'Position',[100 100 300 200])
+set(gcf,'Position',[100 100 300 50])
 set(gcf,'PaperPositionMode','auto')
+print('-depsc2', '-loose','-cmyk', [figpath,'EX_',SystemModel,'_MPC_Comparison_',InputSignalTypeModel,'_',InputSignalType,'_Cost','_N_',num2str(N),'_Model_legend_COMP-ALL.eps']);
 
-% print('-depsc2', '-loose','-cmyk', [figpath,'EX_',SystemModel,'_SI_Comparison_',InputSignalTypeModel,'_',InputSignalType,'_Input','_N_',num2str(N),'.eps']);
-%%
-z=1
+%% Show results of unforced system
+
+ylimits = [0 11; 0 9; 0 1500];
+clear ph hh
+figure, hold on, box on
+ph(4) = plot(Results(1).t(2:end)./7,(Results(ivar).xref(1,2:end))./xnormfinal(1),'-k','LineWidth',1);
+ph(5) = plot(Results(1).t(2:end)./7,(Results(ivar).xref(2,2:end))./xnormfinal(2),':k','LineWidth',1);
+ph(6) = plot(Results(1).t(2:end)./7,(Results(ivar).xref(3,2:end))./xnormfinal(3),'-.k','LineWidth',1);
+ph(1) = plot(Results(1).t./7,(xU(:,1))./xnormfinal(1),'-','Color','k','LineWidth',2);
+ph(2) = plot(Results(1).t./7,(xU(:,2))./xnormfinal(2),':','Color','k','LineWidth',2);
+ph(3) = plot(Results(1).t./7,(xU(:,3))./xnormfinal(3),'-.','Color','k','LineWidth',2);
+ylim([0 1.2])
+xlim([min(Results(1).t./7) max(Results(1).t./7)])
+ylabel('xi','FontSize',14)
+xlabel('Time [weeks]','FontSize',14)
+set(gca,'LineWidth',1, 'FontSize',14)
+set(gcf,'Position',[100 100 300 300])
+set(gcf,'PaperPositionMode','auto')
+print('-depsc2', '-loose','-cmyk', [figpath,'EX_',SystemModel,'_MPC_Comparison_',InputSignalTypeModel,'_',InputSignalType,'_UNFORCED','_COMP-ALL.eps']);
+
+%% Plot legend
+% Version 1
+set(gcf,'Position',[100 100 300 200])
+legend off
+axis on
+xlim([Results(1).t(end) Results(1).t(end)+1])
+ylim([10000 20000])
+l1=legend(ph,'-x1--','-x2--','-x3--','-Ref--');
+set(l1,'Location','SouthEast','Orientation','vertical','FontSize',14)
+axis off
+set(gca,'LineWidth',1, 'FontSize',14)
+set(gcf,'Position',[100 100 120 150])
+set(gcf,'PaperPositionMode','auto')
+print('-depsc2', '-loose','-cmyk', [figpath,'EX_',SystemModel,'_MPC_Comparison_',InputSignalTypeModel,'_',InputSignalType,'_Cost','_N_',num2str(N),'_Model_legend_COMP-ALL_short.eps']);
+
+% Version 2
+set(gcf,'Position',[100 100 300 200])
+legend off
+axis on
+xlim([Results(1).t(end) Results(1).t(end)+1])
+ylim([10000 20000])
+l1=legend(ph,'-x1--','-x2--','-x3--','-Ref1--','-Ref2--','-Ref3--');
+set(l1,'Location','SouthEast','Orientation','vertical','FontSize',14)
+%     l1.Position = [l1.Position(1)+0.1 l1.Position(2)+0.1 l1.Position(3:4)];
+axis off
+set(gca,'LineWidth',1, 'FontSize',14)
+set(gcf,'Position',[100 100 120 160])
+set(gcf,'PaperPositionMode','auto')
+print('-depsc2', '-loose','-cmyk', [figpath,'EX_',SystemModel,'_MPC_Comparison_',InputSignalTypeModel,'_',InputSignalType,'_Cost','_N_',num2str(N),'_Model_legend_COMP-ALL_long.eps']);
+
 
 %% Save results
 save(fullfile(datapath,['MPC_',SystemModel,'_Results_AllModels_',InputSignalTypeModel,'_',InputSignalType,'_N_',num2str(N),'_COMP-ALL.mat']),'Results')
