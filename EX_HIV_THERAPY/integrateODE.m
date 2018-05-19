@@ -1,4 +1,6 @@
 function [t,y,ie] = integrateODE(tspan, x0, solver, time_limit,forcing)
+% Wrapper to terminate integration when it doesn't converge (when it exceeds duration time_limit)
+
 n = length(x0);
 options = odeset('RelTol',1e-10,'AbsTol',1e-10*ones(1,n),'Events', @(t,y)timeoutFun(t,y,time_limit));
 start_time = tic;
