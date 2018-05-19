@@ -9,24 +9,26 @@ addpath('../utils');
 
 SystemModel = 'HIV';
 
+% Model type selected based on DATA_ENSEMBLE and  Ndelay
 %% Generate Data
 InputSignalType = 'prbs';
-ONLY_TRAINING_LENGTH = 1;
 Nvar = 5;
+Ndelay = 1;  % Choose 1 for DMDc, and 10 for DelayDMDc in paper
+DATA_ENSEMBLE = 0; % Choose 0 to reproduce results in paper
 
-DATA_ENSEMBLE = 0;
 %%
-if DATA_ENSEMBLE == 1
+if DATA_ENSEMBLE == 1 % ONLY FOR Ndelay = 1 implemented
     ModelName = 'DMDc';
     getTrainingData_Ensemble
     
     %% Reshape
-    X = x(1:end-1,:,:);
-    Xp = x(2:end,:,:);
-    U = u(1:end-1,:,:);
+    X = x(1:end-1,:,:);         % Array of snapshots
+    Xp = x(2:end,:,:);          % time-shifted Array
+    U = u(1:end-1,:,:);         % Array of inputs
     M = size(X,1);
     n = size(X,2);
     
+    % Reorganize data from array to time-state matrix
     X_tmp = zeros(Nvar,Nic*M);
     Xp_tmp = zeros(Nvar,Nic*M);
     U_tmp = zeros(1,Nic*M);
@@ -41,8 +43,8 @@ if DATA_ENSEMBLE == 1
     clear X_tmp Xp_tmp U_tmp
     M = size(X,2);
     
-    %% Construct data matrices
-    xmean = zeros(1,5);%%mean(X,2)';%xref; %mean(x);
+    %% Construct data matrices // Mean-correction
+    xmean = zeros(1,5); %mean(X,2)';%xref; 
     X   = X - repmat(xmean',[1 M]);
     Xp  = Xp - repmat(xmean',[1 M]);
     
@@ -67,7 +69,7 @@ else
     
     getTrainingData
     %% DMDc: B = unknown  and with time delay coordinates
-    Ndelay = 10; 
+    Ndelay = 1; % 1 for DMDc, 10 for DelayDMDc in paper  
     if Ndelay == 1
         ModelName = 'DMDc';
     elseif Ndelay>1
@@ -76,20 +78,20 @@ else
     
     % Construct data matrices
     Hu = getHankelMatrix_MV(u,Ndelay);
-    xmean = xref;%zeros(1,Nvar);%xref;%mean(x);%xref; %mean(x);
+    xmean = xref; %zeros(1,Nvar);%xref;%mean(x);%xref; %mean(x);
     X   = x - repmat(xmean,[T 1]);
     Hx  = getHankelMatrix_MV(X,Ndelay);
     numOutputs = size(Hx,1); numInputs = size(Hu,1); numVar = 5;
     r1 = size(Hx,1); r2 = size(Hx,1);
     [sysmodel_DMDc,U,Up] = DelayDMDc_MV(Hx,Hu,size(Hx,1),size(Hx,1),dt,size(Hx,1),size(Hu,1),2);
     
-    Nt = length(t)-Ndelay;
+    Nt = length(t)-Ndelay+1;
     %% Validation over training phase
     [xDMDc,~] = lsim(sysmodel_DMDc,Hu',tspan(1:Nt),Hx(:,1));
     xDMDc = xDMDc(:,end-Nvar+1:end);
     xDMDc = xDMDc + repmat(xmean,[Nt 1]);
     
-    %% Show validation
+    %% Show prediction over training stage
     clear ph
     figure,box on,
     ccolors = get(gca,'colororder');
@@ -113,7 +115,7 @@ else
     print('-depsc2', '-loose', '-cmyk', [figpath,'EX_',SystemModel,'_SI_',ModelName,'_',InputSignalType,'.eps']);
     
 end
-%% Save Data
+%% Save Data & Model
 Model.name = ModelName;
 Model.sys = sysmodel_DMDc;
 Model.Ndelay = Ndelay;
