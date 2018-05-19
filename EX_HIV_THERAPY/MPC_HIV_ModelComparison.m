@@ -325,7 +325,7 @@ end
 % Parameters MPC
 options = optimoptions('fmincon','Algorithm','sqp','Display','none', ...
     'MaxIterations',100);
-Nweeks = 100;
+Nweeks = 50;
 DaysPerWeek  = 7;
 Duration = Nweeks*DaysPerWeek;                 % Run for 'Duration' time units
 Ton = tA(end)+1;                     % Time units when control is turned on
