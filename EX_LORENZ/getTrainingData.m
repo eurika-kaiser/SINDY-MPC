@@ -1,6 +1,5 @@
 %% Execute this file to collect training data for model identification
 
-
 % Parameters: Model
 p.SIGMA = 10;             % True system parameters
 p.RHO = 28;
@@ -10,16 +9,15 @@ x0=[-8; 8; 27];  % Initial condition
 xref1 = [sqrt(p.BETA*(p.RHO-1));sqrt(p.BETA*(p.RHO-1));p.RHO-1];     % critical point
 xref2 = [-sqrt(p.BETA*(p.RHO-1));-sqrt(p.BETA*(p.RHO-1));p.RHO-1];
 
-dt = 0.001;
-
+dt = 0.001;  % Time step
 
 
 if ONLY_TRAINING_LENGTH == 1
-    % Training
+    % Without noise-corruption
     tspan=[0:dt:20];
     Ntrain = (length(tspan)-1)/2+1;
 else
-    % Noise
+    % If Noise-corruption
     tspan=[0:dt:40];
     Ntrain = 3*(length(tspan)-1)/4+1;
 end
@@ -37,27 +35,19 @@ switch InputSignalType
     case 'chirp'
         A = 2;
         forcing = @(x,t) A*chirp(t,[],max(tspan),1.).^2;
-        %         forcing = @(x,t) 1*chirp(t,[],100-2*roundn(t,1)+0.01,1.);
-        %         forcing = @(x,t) Amp*sawtooth(t,1).*chirp(t,[],max(tspan),1.5); %3.5
         [t,x]=ode45(@(t,x) LorenzSys(t,x,forcing(x,t),p),tspan,x0,options);
         u = forcing(0,tspan);
         
     case 'noise'
-        vareps = 0.01; %0.2
-        %         forcing = @(x,t) Amp*randn(1,1);
+        vareps = 0.01; 
         Diff = @(t,x) [0; vareps];
         SDE = sde(@(t,x) LorenzSys(t,x,forcing(x,t),p),Diff,'StartState',x0');
         rng(1,'twister')
-        %[xdat,t] = simulate(SDE, N, 'DeltaTime', dt);
         [x, t, u] = simByEuler(SDE, length(tspan), 'DeltaTime', dt);
         u = u';
         x = x(1:end-1,:); t = t(1:end-1);
-        %         noise = @(t,A)[0;0.0001];
-        %         opts = sdeset('RandSeed',19);
-        %         [x,u] = sde_euler(lotkacontrol(t,x,0,a,b,d,g),noise,tspan,x0,opts);
-        %         t = tspan;
     case 'prbs'
-        A = 1; %0.5;
+        A = 1; 
         taulim = [0.1 5];
         states = [-1 1];
         Nswitch = 300;
@@ -72,8 +62,8 @@ switch InputSignalType
         figure,plot(tspan,u)
         
     case 'sphs'
-        Pf = 0.5; %5 % Fundamental period
-        K = 8; %16
+        Pf = 0.5; % Fundamental period
+        K = 8; 
         A = 10;
         forcing = @(x,t) A*sphs(Pf,K,t);
         [t,x]=ode45(@(t,x) LorenzSys(t,x,forcing(x,t),p),tspan,x0,options);
@@ -124,10 +114,11 @@ t = t(1:Ntrain);
 tspanv = tspan(Ntrain+1:end);
 tspan = tspan(1:Ntrain);
 
+T = length(tspan);
+N = length(tspan);
+
+%% Show data
 figure,plot(tspan,u)
-
-%%
-
 figure;
 plot(t,x,'LineWidth',1.5)
 xlabel('Time')
@@ -136,29 +127,5 @@ legend('Prey','Predator')
 set(gca,'LineWidth',1, 'FontSize',14)
 set(gcf,'Position',[100 100 300 200])
 set(gcf,'PaperPositionMode','auto')
-% print('-depsc2', [figpath,'EX_LOTKA_Dynamics.eps']);
 
 
-T = length(tspan);
-N = length(tspan);
-
-%% Time delay data
-% xmean = xref';
-% if exist('Ndelay','var') == 1
-%     X   = x - repmat(xmean,[T 1]);
-%     Hx  = getHankelMatrix_MV(X,max(Ndelay));
-%     if length(Ndelay) == 1 && Ndelay>1
-%         Hx = Hx([1:2,2*Ndelay-1:2*Ndelay],:);
-%     elseif length(Ndelay) == 1 && Ndelay==1
-%         Hx = Hx(1:2,:);
-%     end
-%     Nt  = size(Hx,2);
-%     
-%     Hu = getHankelMatrix_MV(u',max(Ndelay));
-%     if length(Ndelay) == 1 && Ndelay>1
-%         Hu = Hu([1,Ndelay],:);
-%     elseif length(Ndelay) == 1 && Ndelay==1
-%         Hu = Hu;
-%     end
-%     % Hu = getHankelMatrix_MV(u',1); Hu = Hu(:,1:Nt);
-% end
