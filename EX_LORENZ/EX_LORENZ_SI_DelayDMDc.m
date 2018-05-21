@@ -15,6 +15,7 @@ ONLY_TRAINING_LENGTH = 1;
 getTrainingData
 
 Nt = length(tspan)-1;
+
 %% DMDc: B = unknown  and with time delay coordinates
 ModelNumber = 2; % or 2
 xrefs = [xref1,xref2];
@@ -36,8 +37,8 @@ for i = 1:ModelNumber
 end
 %% Prediction over training phase
 for i = 1:ModelNumber
-    [xDMDc{i},~] = lsim(sysmodel_DMDc{i},Hu',tspan(1:end-1),x(1,:)'-xmean{i}');
-    xDMDc{i} = xDMDc{i} + repmat(xmean{i},[length(tspan)-1 1]);
+    [xDMDc{i},~] = lsim(sysmodel_DMDc{i},Hu',tspan(1:end),x(1,:)'-xmean{i}');
+    xDMDc{i} = xDMDc{i} + repmat(xmean{i},[length(tspan) 1]);
 end
 
 %% Show validation
@@ -47,8 +48,8 @@ for i = 1:ModelNumber
     ccolors = get(gca,'colororder');
     ph(1) = plot(tspan,x(:,1),'-','Color',ccolors(1,:),'LineWidth',1); hold on
     ph(2) = plot(tspan,x(:,2),'-','Color',ccolors(2,:),'LineWidth',1);
-    ph(3) = plot(tspan(Ndelay:Nt+Ndelay-1),xDMDc{i}(:,1),'--','Color',ccolors(1,:)-[0 0.2 0.2],'LineWidth',2);
-    ph(4) = plot(tspan(Ndelay:Nt+Ndelay-1),xDMDc{i}(:,2),'--','Color',ccolors(2,:)-[0.1 0.2 0.09],'LineWidth',2);
+    ph(3) = plot(tspan(Ndelay:Nt+Ndelay),xDMDc{i}(:,1),'--','Color',ccolors(1,:)-[0 0.2 0.2],'LineWidth',2);
+    ph(4) = plot(tspan(Ndelay:Nt+Ndelay),xDMDc{i}(:,2),'--','Color',ccolors(2,:)-[0.1 0.2 0.09],'LineWidth',2);
     xlim([0 (length(tspan)-1)*dt]), ylim([-25 50])
     xlabel('Time')
     ylabel('Population size')
