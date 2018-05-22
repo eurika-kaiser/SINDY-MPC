@@ -1,7 +1,10 @@
-% LORENZ system
-%118.2675
-%98.2860
-%2.1048e+03
+% Control of the chaotic Lorenz system using model predictive control
+% and various models
+
+% Previous execution times:
+% DMDc: 118.2675, 51.8924, %N=10: 120.9128
+% SINDYc: 98.2860, 46.0083, 96.8967
+% NN: 2.1048e+03, 1.4662e+03, 2.1755e+03
 
 clear all, close all, clc
 
@@ -9,13 +12,13 @@ SystemModel = 'LORENZ';
 
 figpath = ['../../FIGURES/',SystemModel,'/'];mkdir(figpath)
 datapath = ['../../DATA/',SystemModel,'/'];mkdir(datapath)
-% datapath = ['/Users/ekaiser/Documents/Academia/Papers/KaKuBr_SINDYc-MPC/DATA/'];
 addpath('../utils');
 
-%% Load Models
+%% Parameters
 Nvar = 3;
 InputSignalTypeModel = 'sphs'; % prbs; chirp; noise; sine2; sphs; mixed
 
+%% Load Models
 % DelayDMDc
 ModelTypeDMDc = 'DMDc';
 load(fullfile(datapath,['EX_',SystemModel,'_SI_',ModelTypeDMDc,'_',InputSignalTypeModel,'.mat'])) % Model: DelayDMDc , DMDc
@@ -37,16 +40,15 @@ Ndelay = Models.DelayDMDc.Ndelay;
 getTrainingData
 
 %% Get validation data
-InputSignalType = 'sine2';% prbs; chirp; noise; sine2; sphs; mixed
-Ndelay = Models.DelayDMDc.Ndelay;
-getValidationData
-
+% InputSignalType = 'sine2';% prbs; chirp; noise; sine2; sphs; mixed
+% Ndelay = Models.DelayDMDc.Ndelay;
+% getValidationData
+x0 = x(end,:);
+tspanV =[tspan(end):dt:20];
+t_valid = tspanV';
 %% FIGURE 1:  // Model comparison + Validation
 % Forcing
-% forcing = @(x,t) [(2*(sin(1*t)+sin(.1*t))).^2]; %0.33
-% forcing = @(x,t) [(1.8*(sin(1.1*t)+sin(.2*t))).^2]; %0.33
 forcing = @(x,t) (5*sin(30*t)).^3;
-% tspanV =[tspan(end):dt:20];
 
 % Reference
 [tA,xA] = ode45(@(t,x)LorenzSys(t,x,forcing(x,t),p),tspanV,x(end,1:3),options);   % true model
@@ -54,7 +56,7 @@ u_valid = forcing(0,tA)';
 
 % DelayDMDc / DMDc
 % Model
-iDMDc = 1; %%%% !!!!!!!!!!!!!!!!!!!! May use other one?
+iDMDc = 1; % Choose dependent on goal state
 if Ndelay == 1
     x0      = [x(end,1:Nvar)];
     Hunew   = [u(end),u_valid(1:end-1)];
@@ -159,9 +161,8 @@ print('-depsc2', '-loose','-cmyk', [figpath,'EX_',SystemModel,'_SI_Comparison_Va
 options = optimoptions('fmincon','Algorithm','sqp','Display','none', ...
     'MaxIterations',100);
 N  = 10;                        % Control / prediction horizon (number of iterations)
-Duration = 5;                 % Run for 'Duration' time units
+Duration = 5;                   % Run for 'Duration' time units
 Ton = 0;                        % Time units when control is turned on
-% Nvar = 3; % already defined
 getMPCparams
           
 x0n=xA(end,:)';                 % Initial condition
@@ -170,7 +171,7 @@ xref1 = [-sqrt(p.BETA*(p.RHO-1));-sqrt(p.BETA*(p.RHO-1));p.RHO-1];
 Tcontrol = tA(end);             % Time offset to combine training, prediction and control phase
 
 % Parameters Models
-ModelCollection = {ModelTypeDMDc, 'SINDYc', 'NARX'}; % 51.8924, 46.0083, 1.4662e+03
+ModelCollection = {ModelTypeDMDc, 'SINDYc', 'NARX'}; 
 Nmodels = length(ModelCollection);
 
 % Parameters True Model
@@ -202,43 +203,31 @@ for iM = 1:Nmodels
             pest.sys = Models.DelayDMDc.sys;
             pest.xmean = xmean';
             pest.udelay = zeros(1,N);
-            %         pest.xdelay = [x(end-Ndelay+1:end-Ndelay+N,1:2)]';
             pest.xdelay = [x(end-Ndelay+1,1:2)]';
             pest.Nxlim = size(x,1);
-            %Ts = Models.DelayDMDc.dt; % Sampling time
         case 'DMDc'
             Ndmd = length(Models.DelayDMDc.sys);
             DMDc_mean = zeros(Ndmd,Nvar);
             for iDMD = 1:Ndmd
                 DMDc_mean(iDMD,:) = Models.DelayDMDc.xmean{iDMD};
             end
-%             [~,idx] = min( sum( abs( DMDc_mean-repmat(x0n',[Ndmd 1]) ).^2 ,2) );
             [~,idx] = min( sum( abs( DMDc_mean-repmat(xref1',[Ndmd 1]) ).^2 ,2) );
             pest.dt = Models.DelayDMDc.dt;
             pest.sys = Models.DelayDMDc.sys{idx};
             pest.xmean = DMDc_mean(idx,:)';
-            pest.Nxlim = size(x,1);
-            %Ts = Models.DelayDMDc.dt; % Sampling time    
+            pest.Nxlim = size(x,1); 
         case 'SINDYc'
             pest.ahat = Models.SINDYc.Xi(:,1:Nvar);
-%             pest.ahat([2,3,5],1) = [-10,10,1];
-%             pest.ahat([2,3,8],2) = [28,-1,-1];
-%             pest.ahat([4,7],3) = [-8/3,1];
             pest.polyorder = Models.SINDYc.polyorder;
             pest.usesine = Models.SINDYc.usesine;
-            pest.dt = Models.SINDYc.dt;%*10
-            %Ts = Models.SINDYc.dt; % Sampling time
-            
+            pest.dt = Models.SINDYc.dt;
         case 'NARX'
             pest.net = Models.NARX.net;
-            pest.Ndelay = 1;%Models.NARX.Ndelay;
+            pest.Ndelay = 1;
             pest.udelay = zeros(1,Ndelay);
             pest.xdelay = zeros(2,length(pest.udelay));
             pest.xdelay(:,1:Ndelay) = [x(end-Ndelay+1:end,1:2)]';
             pest.Nxlim = size(x,1);
-            %pest.xmean = xmean';
-%             pest.umean = Models.NARX.umean;
-            %Ts = Models.NARX.dt; % Sampling time
     end
     
     
@@ -261,31 +250,6 @@ for iM = 1:Nmodels
         tHistory(:,ct+1) = ct*Ts+Tcontrol;
         
         % Update states/inputs/parameters
-        %     if strcmp(select_model,'DelayDMDc')
-        %         if pest.Nxlim-Ndelay+N+ct<=pest.Nxlim
-        %             pest.udelay = zeros(1,N);
-        %             %pest.xdelay = [x(end-Ndelay+1+ct:end-Ndelay+N+ct,1:2)]'; %[x(end-Ndelay+1+ct,1:2),xhat]';
-        %             pest.xdelay = [x(end-Ndelay+1+ct,1:2)]';
-        %         elseif pest.Nxlim-Ndelay+1+ct<pest.Nxlim && pest.Nxlim-Ndelay+N+ct>pest.Nxlim
-        %             idiff = pest.Nxlim-Ndelay+N+ct - pest.Nxlim;
-        %             pest.udelay = [zeros(1,N-idiff+1),uHistory(1:ct-(Ndelay-N))];
-        %             %pest.xdelay = [x(end-Ndelay+1+ct:end,1:2),xHistory(1:2,ct-(Ndelay-N))']';
-        %             pest.xdelay = [x(end-Ndelay+1+ct,1:2)]';
-        %         else
-        %             idiff = pest.Nxlim-Ndelay+N+ct - pest.Nxlim;
-        %             pest.udelay = [uHistory(ct-Ndelay+1:ct-(Ndelay-N))];
-        %             %pest.xdelay = [xHistory(1:2,ct-Ndelay+1:ct-(Ndelay-N))]';
-        %             pest.xdelay = [xHistory(1:2,ct-Ndelay+1)']';
-        %         end
-        %         if size(pest.xdelay,2)~=1
-        %             disp('Error in size.')
-        %             return
-        %         end
-        %         if length(pest.udelay)~=N
-        %             disp('Error in size.')
-        %             return
-        %         end
-        %     if strcmp(select_model,'NARX') || strcmp(select_model,'DelayDMDc')
         if strcmp(select_model,'DelayDMDc')
             if  pest.Nxlim-Ndelay+1+ct<=pest.Nxlim
                 pest.udelay = [zeros(1,Ndelay-ct),uHistory(1:ct)];
@@ -304,10 +268,6 @@ for iM = 1:Nmodels
                 disp('Error in size.')
                 return
             end
-%         elseif strcmp(select_model, 'DMDc')
-%             [~,idx] = min( sum( abs( DMDc_mean-repmat(xhat',[Ndmd 1]) ).^2 ,2) );
-%             pest.sys = Models.DelayDMDc.sys{idx};
-%             pest.xmean = DMDc_mean(idx,:)';
         end
     end
     fprintf('Simulation finished!\n')
@@ -325,41 +285,6 @@ for iM = 1:Nmodels
     
 end
 
-%N=10: 120.9128, 96.8967, 2.1755e+03
-
-%%
-% figure,hold on
-% plot([1 length(Results(1).J); 1 length(Results(1).J); 1 length(Results(1).J)]',[xref1,xref1]','-k')
-% plot(Results(1).x','-'), plot(Results(2).x','--')
-% 
-% figure,plot(cumsum(Results(1).J'),'-'), hold on, plot(cumsum(Results(2).J'),'--')
-% figure,plot(Results(1).u','-'), hold on, plot(Results(2).u','--')
-
-%%
-
-% iM = 1; [J1,Js1,Ju1] = evalObjectiveFCN(Results(iM).u,Results(iM).x,Results(iM).xref,diag(Q),R,Ru);
-% 
-% iM = 2; [J2,Js2,Ju2] = evalObjectiveFCN(Results(iM).u,Results(iM).x,Results(iM).xref,diag(Q),R,Ru);
-% 
-% figure,
-% subplot(3,1,1), plot(cumsum(J1),'-k'), hold on, plot(cumsum(J2),'--r')
-% subplot(3,1,2), plot(cumsum(Js1),'-k'), hold on, plot(cumsum(Js2),'--r')
-% subplot(3,1,3), plot(cumsum(Ju1),'-k'), hold on, plot(cumsum(Ju2),'--r')
-% return
-% figure,plot(cumsum(Results(1).J'),'-'), hold on, plot(cumsum(Results(2).J'),'--')
-% plot(cumsum(J'),'-.k')
-% 
-% figure; hold on, grid on
-% plot(Results(1).x'-Results(iM).xref','-k'), plot(Results(2).x'-Results(iM).xref','--r')
-% 
-% figure,plot(cumsum(Results(1).J'),'-k'), hold on, plot(cumsum(Results(2).J'),'--r')
-% plot(cumsum(Js'),'-.g')
-% 
-% figure,plot((Results(1).J'),'-k'), hold on, plot((Results(2).J'),'--r')
-% plot((Js'),'-.g')
-% return
-% iM = 2; [J,Js,Ju] = evalObjectiveFCN(Results(iM).u,Results(iM).x,Results(iM).xref,diag(Q),R,Ru);
-
 %% Unforced
 [tU,xU] = ode45(@(t,x)LorenzSys(t,x,0,p),tHistory,xA(end,1:3),options);   % true model
 
@@ -373,10 +298,8 @@ ph(2) = plot(Results(1).t,cumsum(Results(2).J),'--g','LineWidth',2);
 l1=legend(ph,ModelCollection);
 set(l1,'Location','SouthEast')
 xlim([Results(1).t(1) Results(1).t(end)])
-% ylim([0 60])
 ylabel('Cost','FontSize',14)
 xlabel('Time','FontSize',14)
-% set(gca,'yscale','log')
 set(gca,'LineWidth',1, 'FontSize',14)
 set(gcf,'Position',[100 100 300 200])
 set(gcf,'PaperPositionMode','auto')
