@@ -1,10 +1,12 @@
+% LORENZ system
+% Visualization of results, dependency on noise level
+
 clear all, close all, clc
 
 SystemModel = 'LORENZ';
 
 figpath = '../../FIGURES/'; mkdir(figpath)
-datapath = '../../DATA/EX_LOTKA_Dependencies/'; mkdir(datapath)
-datapath = ['/Users/ekaiser/Documents/Academia/Papers/KaKuBr_SINDYc-MPC/DATA/EX_',SystemModel,'_Dependencies/'];
+datapath = '../../DATA/EX_LORENZ_Dependencies/'; mkdir(datapath)
 addpath('../utils');
 
 %% Paramaters
