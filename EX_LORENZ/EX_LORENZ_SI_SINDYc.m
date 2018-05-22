@@ -1,4 +1,4 @@
-% LOTKA-VOLTERRA system
+% LORENZ system
 % System identification: DelayDMDc
 
 clear all, close all, clc
@@ -9,10 +9,11 @@ addpath('../utils');
 
 SystemModel = 'LORENZ';
 
-%% Generate Data %{'sine2', 'chirp','prbs', 'sphs'}
+%% Generate Data 
 InputSignalType = 'sphs'; %prbs; chirp; noise; sine2; sphs; mixed
 ONLY_TRAINING_LENGTH = 1;
 getTrainingData
+u = u'; uv = uv';
 
 %% SINDYc
 % Parameters
@@ -43,7 +44,7 @@ else
     for ct=1:N-1
         xSINDYc(:,ct+1) = rk4u(@sparseGalerkinControl_Discrete,xSINDYc(:,ct),u(ct),dt,1,[],p);
     end
-    xSINDYc = xSINDYc';%(:,2:N+1)';
+    xSINDYc = xSINDYc';
 end
 
 %% Show validation
@@ -60,7 +61,6 @@ end
 xlim([0 (length(tspan)-1)*dt]), ylim([-25 50])
 xlabel('Time')
 ylabel('xi')
-% legend('Prey (True)','Predator (True)', 'Prey (DMDc)','Predator (DMDc)')
 legend(ph([1,4]),'True',ModelName)
 set(gca,'LineWidth',1, 'FontSize',14)
 set(gcf,'Position',[100 100 300 200])
@@ -104,8 +104,6 @@ VIZ_3D_MODELvsTRUTH
 
 %% Show training and prediction
 VIZ_SI_Validation
-
-%% Error // TODO
 
 %% Save Data
 Model.name = 'SINDYc';
