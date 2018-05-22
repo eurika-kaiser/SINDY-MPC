@@ -79,11 +79,11 @@ print('-depsc2', '-loose','-cmyk', [figpath,'EX_',SystemModel,'_SI_',ModelName,'
 clear ph
 figure,box on, hold on, 
 ccolors = get(gca,'colororder');
-plot([tA(1),tA(1)],[-15 260],':','Color',[0.4,0.4,0.4],'LineWidth',1.5)
+plot([tA(1),tA(1)],[min([u;uv]) max([u;uv])],':','Color',[0.4,0.4,0.4],'LineWidth',1.5)
 plot(t,u,'-k','LineWidth',1);
 plot(tv,uv,'-k','LineWidth',1);
 grid off
-ylim([min([u uv])+0.05*min([u uv]) max([u uv])+0.05*max([u uv])])
+ylim([min([u;uv])+0.05*min([u;uv]) max([u;uv])+0.05*max([u;uv])])
 xlim([0 tB(end)])
 xlabel('Time')
 ylabel('Input')
