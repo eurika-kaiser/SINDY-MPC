@@ -31,19 +31,11 @@ else %excitation using Gaussian white noise
     for i = 1:size(x,2)
         dx(:,i) = TVRegDiff( x(:,i), 20, .00002, [], 'small', 1e12, dt, 1, 1 ); %.00002
     end
-%     hold on
-%     plot(dxclean(:,1),'r')
-%     figure
-%     dx(:,2) = TVRegDiff( x(:,2), 20, .00002, [], 'small', 1e12, dt, 1, 1 );
-%     hold on
-%     plot(dxclean(:,2),'r')
     dx = dx(2:end,:);
     
     for i = 1:size(x,2)
-        xt(:,i) = cumsum(dx(:,i))*dt; %xt(:,1) = xt(:,1) + x0(1);
-        %xt(:,2) = cumsum(dx(:,2))*dt; %xt(:,2) = xt(:,2) + x0(2);
+        xt(:,i) = cumsum(dx(:,i))*dt;
         xt(:,i) = xt(:,i) - (mean(xt(50:end-50,i)) - mean(x(50:end-50,i)));
-        %xt(:,2) = xt(:,2) - (mean(xt(50:end-50,2)) - mean(x(50:end-50,2)));
     end
     xt = xt(50:end-51,:);
     dx = dx(50:end-51,:);  % trim off ends (overly conservative)
@@ -51,14 +43,7 @@ else %excitation using Gaussian white noise
     dx(:,size(x,2)+1) = 0*dx(:,size(x,2));
     close all
 end
-% clear dx
-% eps = 0;
-% for i=1:length(x)
-%     dx(i,:) = lotkacontrol(0,x(i,:),u(i),a,b,d,g);
-% end
-% xaug = [x u'];
-% dx(:,3) = 0*dx(:,2);
-% dx = dx + eps*randn(size(dx));
+
 n = size(dx,2);
 
 % Sparse regression
@@ -77,12 +62,6 @@ else
     Xi = sparsifyDynamics(Theta,dx,lambda,n-1);
 end
 
-% count_lambda = 0;
-% while all(Xi(:)==0)==1 && count_lambda < 5
-%     lambda = lambda/10
-%     Xi = sparsifyDynamics(Theta,dx,lambda,n);
-%     count_lambda = count_lambda + 1;
-% end
 
 if n == 3
     str_vars = {'x','y','u'};
