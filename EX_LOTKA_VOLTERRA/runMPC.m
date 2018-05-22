@@ -8,8 +8,8 @@ x0=[60,50];
 xref = [g/d;a/b]; % critical point
 dt = Models(1).dt;
 
-Pf = 20; %5 % Fundamental period
-K = 8; %16
+Pf = 20;  % Fundamental period
+K = 8; 
 A = 5;
 forcing = @(x,t) A*sphs(Pf,K,t).^2;
 
@@ -18,7 +18,6 @@ forcing = @(x,t) A*sphs(Pf,K,t).^2;
 
 
 options = odeset('RelTol',1e-10,'AbsTol',1e-10*ones(1,2));
-% tspanV =[100:dt:200];
 tspan = [0:dt:200];
 [tA,xA] = ode45(@(t,x)lotkacontrol(t,x,forcing(x,t),a,b,d,g),tspan,x0,options);
 uA = forcing(0,tspan);
@@ -27,19 +26,18 @@ uA = forcing(0,tspan);
 options = optimoptions('fmincon','Algorithm','sqp','Display','none', ...
     'MaxIterations',100);
 N  = 10;                        % Control / prediction horizon (number of iterations)
-Duration = 20;%100;                 % Run for 'Duration' time units
+Duration = 20;                  % Run for 'Duration' time units
 Ton = 0;                        % Time units when control is turned on
 Nvar = 2;
 Q = [1 1];                      % State weights
-R = 0.5;%0.5;                   % du weights
-Ru = 0.5;%0.5;                  % u weights
+R = 0.5;                        % du weights
+Ru = 0.5;                       % u weights
 B = [0; 1];
 C = eye(Nvar);
 D = 0;
 LB = -20*ones(N,1);             % Lower bound of control input
-UB = 20*ones(N,1);              % Upper bound of control input
-% x0n=x0(3:4)';                 % Initial condition
-x0n=xA(end,:)';
+UB = 20*ones(N,1);              % Upper bound of control input      
+x0n=xA(end,:)';                 % Initial condition
 xref1 = [g/d;a/b];              % critical point
 Tcontrol = tA(end);             % Time offset to combine training, prediction and control phase
 
@@ -80,31 +78,15 @@ for iM = 1:Nmodels
             pest.sys = Models.DelayDMDc.sys;
             pest.xmean = xmean';
             pest.udelay = zeros(1,N);
-            %         pest.xdelay = [x(end-Ndelay+1:end-Ndelay+N,1:2)]';
             pest.xdelay = [x(end-Ndelay+1,1:2)]';
             pest.Nxlim = size(x,1);
-            Ts = Models.DelayDMDc.dt; % Sampling time
+            Ts = Models.DelayDMDc.dt; 
         case 'DMDc'
             this_model.xmean = xref;
-%             pest.dt = Models.DelayDMDc.dt;
-%             pest.sys = Models.DelayDMDc.sys;
-%             pest.xmean = xmean';
-%             pest.Nxlim = size(x,1);
-%             Ts = Models.DelayDMDc.dt; % Sampling time
         case 'SINDYc'
-            this_model.ahat = this_model.Xi(:,1:2);
-            %             pest.polyorder = this_model.SINDYc.polyorder;
-            %             pest.usesine = this_model.SINDYc.usesine;
-            %             pest.dt = this_model.SINDYc.dt;
-            
-            
+            this_model.ahat = this_model.Xi(:,1:2);         
         case 'NARX'
             this_model.Ndelay = 1;
-%             this_model.udelay = zeros(1,Ndelay);
-%             this_model.xdelay = zeros(2,length(this_model.udelay));
-%             pest.xdelay(:,1:Ndelay) = [x(end-Ndelay+1:end,1:2)]';
-%             pest.Nxlim = size(x,1);
-%             Ts = Models.NARX.dt;
     end
     
     % Start simulation

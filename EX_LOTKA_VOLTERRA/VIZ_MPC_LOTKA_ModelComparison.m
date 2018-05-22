@@ -3,7 +3,6 @@
 clear all, close all, clc
 figpath = '../../FIGURES/NOT_USED/'; mkdir(figpath)
 datapath = '../../DATA/';
-% datapath = '/Users/ekaiser/Documents/Academia/Papers/KaKuBr_SINDYc-MPC/DATA/';
 addpath('../utils');
 
 %% Load Models
@@ -35,14 +34,8 @@ getValidationData
 
 
 %% FIGURE 1:  // Model comparison + Validation
-% Forcing
-% forcing = @(x,t) [(2*(sin(1*t)+sin(.1*t))).^2]; %0.33
-% forcing = @(x,t) [(1.8*(sin(1.1*t)+sin(.2*t))).^2]; %0.33
-% forcing = @(x,t) Amp*chirp(t,[],max(tspan),1.).^2;
 
 % Reference
-%x0      = [x(end-Ndelay+1,1:2),x(end,1:2)];
-% tspanV   = [100:dt:200];
 [tA,xA] = ode45(@(t,x)lotkacontrol(t,x,forcing(x,t),a,b,d,g),tspanV,x(end,1:2),options);   % true model
 
 % DelayDMDc / DMDc
@@ -59,33 +52,17 @@ elseif Ndelay > 1
     xB = xB(:,3:4); xB = xB + repmat(xmean,[size(xB,1) 1]);
 end
 xB = xB + repmat(xmean,[length(tB) 1]);
-% if strcmp(ModelType,'DelayDMDc')
-%     unew    = forcing(0,tspan);
-%     Hunew   = [ u(end-Ndelay+1:end),unew(1:end-Ndelay);
-%         u(end),unew(1:end-1)];
-%
-%     [xB,tB] = lsim(Models.DelayDMDc.sys,Hunew,tspan,[x0-[xmean,xmean]]');
-%     xB = xB(:,3:4); xB = xB + repmat(xmean,[size(xB,1) 1]);
-% elseif strcmp(ModelType,'DMDc')
-%     [xDMDc,~] = lsim(sysmodel_DMDc,Hu,tspan(1:Nt),Hx(:,1));
-%     xDMDc = xDMDc(:,end-1:end);
-%     xDMDc = xDMDc + repmat(xmean,[Nt 1]);
-% end
+
 % SINDYc
 [tC,xC]=ode45(@(t,x)sparseGalerkinControl(t,x,forcing(x,t),Models.SINDYc.Xi(:,1:2),Models.SINDYc.polyorder,Models.SINDYc.usesine),tspanV,x(end,1:2),options);  % approximate
 
 % NARX
-% Udummy = [u(end-Ndelay+1:end),unew(1:end)];
-% Hdummy = zeros(2,size(Udummy,2));
-% Hdummy(:,1:Ndelay) = x(end-Ndelay+1:end,1:2)'- repmat(xmean',[1 Ndelay]);
-Udummy = [u(end),u_valid(1:end)];%-Models.NARX.umean;
+Udummy = [u(end),u_valid(1:end)];
 Hdummy = zeros(2,size(Udummy,2));
-Hdummy(:,1) = x(end,1:2)';%-xmean';
+Hdummy(:,1) = x(end,1:2)';
 [Us,Ui,Si] = preparets(Models.NARX.net,con2seq(Udummy),{},con2seq(Hdummy));
 xD = Models.NARX.net(Us,Ui,Si); % Predict on validation data
-xD = cell2mat(xD)'; xD = [x0;xD(1:end-1,:)];% + repmat(xmean,[size(xD,1) 1]);
-% Error
-%e = cell2mat(gsubtract(So,predict));
+xD = cell2mat(xD)'; xD = [x0;xD(1:end-1,:)];
 
 %%
 clear ph
@@ -131,9 +108,6 @@ clear ph
 figure,box on, hold on,
 ccolors = get(gca,'colororder');
 plot([tA(1),tA(1)],[-15 260],':','Color',[0.4,0.4,0.4],'LineWidth',1.5)
-% text(tB(1)-50,max([u uv])-0.1*max([u uv]),'Training', 'FontSize',12,'Color','r')
-% text(10+tB(1),max([u uv])-0.1*max([u uv]),'Validation', 'FontSize',12,'Color','r')
-% text(5+tB(1),210,'turned on', 'FontSize',12)
 plot(t,u,'-k','LineWidth',1);
 plot(t_valid,u_valid,'-k','LineWidth',1);
 grid off
@@ -155,9 +129,8 @@ Duration = 100;                 % Run for 'Duration' time units
 Ton = 0;                        % Time units when control is turned on
 Nvar = 2;
 getMPCparams
-
-% x0n=x0(3:4)';                   % Initial condition
-x0n=xA(end,:)';
+                
+x0n=xA(end,:)';                 % Initial condition
 xref1 = [g/d;a/b];              % critical point
 Tcontrol = tA(end);             % Time offset to combine training, prediction and control phase
 
@@ -192,15 +165,12 @@ for iM = 1:Nmodels
 end
      
 
-%% Correct cost
+%% Get cost // evaluate performance
 % Data2 = Datal
 Costs = zeros(length(Results(1).u),3,Nmodels);
 
-% 
 for iM = 1:Nmodels
-%     Results(iM).J = evalObjectiveFCN(Results(iM).u,Results(iM).x,Results(iM).xref,diag(Q),R,Ru); %Data(iM).xref
     [J] = evalObjectiveFCN(Results(iM).u,Results(iM).x,Results(iM).xref,diag(Q),R,Ru);
-%     [J,Js,Ju] = evalObjectiveFCN(Results(iM).u,Results(iM).x,Results(iM).xref,diag(Q),R,Ru);
     Costs(:,1,iM) = J; %Costs(:,2,iM) = Js; Costs(:,3,iM) = Ju;
 end
 
@@ -247,11 +217,9 @@ ph(3) = plot(Results(1).t,cumsum(Costs(:,iJ,3)),'-.','Color',[0.7,0.7,1],'LineWi
 
 l1=legend(ph,ModelCollection);
 set(l1,'Location','NorthEast')
-% ylim([0 60])
 ylabel('Cost','FontSize',14)
 xlabel('Time','FontSize',14)
 set(gca,'LineWidth',1, 'FontSize',14)
 set(gcf,'Position',[100 100 300 200])
 set(gcf,'PaperPositionMode','auto')
-
-return    
+    

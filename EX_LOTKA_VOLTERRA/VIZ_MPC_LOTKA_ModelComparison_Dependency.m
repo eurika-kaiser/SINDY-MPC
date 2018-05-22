@@ -2,9 +2,7 @@
 
 clear all, close all, clc
 figpath = '../../FIGURES/'; mkdir(figpath)
-datapath = '../../DATA_1/';
-% datapath = '/Users/ekaiser/Documents/Academia/Papers/KaKuBr_SINDYc-MPC/DATA/';
-datapath = '/Users/ekaiser/Documents/Academia/Papers/KaKuBr_SINDYc-MPC/WORKING/DATA/';
+datapath = '../../DATA/';
 addpath('../utils');
 
 %% Load Models
@@ -165,15 +163,6 @@ for iM = 1:Nmodels
 end
 
 
-
-% for iM = 1:Nmodels
-%     for iL = 1:N_LENGTHS
-%        
-%        if ResultsALL(iL,iM).t(end) == 0
-%            ResultsALL(iL,iM).J(end) = 10^10;
-%        end
-%     end
-% end
 %% Show Performance over training lengths
 clear ph
 ccolors = [1 0 0; 0 1 0; 0.7,0.7,1];
@@ -414,7 +403,7 @@ print('-depsc2', '-painters', '-loose', '-cmyk', [figpath,'EX_LOTKA_CTRLPERF_',I
 
 
 return
-%%
+%% TESTING
 
 % [~,idx_best_DMDc] = min(JendAll(:,1));
 % % plot(Ntrain_vec,JendAll(idx_best,2)*ones(size(Ntrain_vec)),'-','Color',ccolors(2,:),'LineWidth',1)

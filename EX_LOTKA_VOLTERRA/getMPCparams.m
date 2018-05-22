@@ -1,6 +1,6 @@
 Q = [1 1];                      % State weights
-R = 0.5;%0.5;                   % du weights
-Ru = 0.5;%0.5;                  % u weights
+R = 0.5;                        % du weights
+Ru = 0.5;                       % u weights
 B = [0; 1];
 C = eye(Nvar);
 D = 0;

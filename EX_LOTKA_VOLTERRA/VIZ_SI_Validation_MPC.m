@@ -1,133 +1,8 @@
-% %%
-% clear ph
-% 
-% figure;hold on, box on,
-% ccolors = get(gca,'colororder');
-% plot([t(end),t(end)],[-15 260],':','Color',[0.4,0.4,0.4],'LineWidth',1)
-% plot([tA(end),tA(end)],[-15 260],':','Color',[0.4,0.4,0.4],'LineWidth',1)
-% text(5,250,'Training', 'FontSize',12)
-% text(tA(1)+5,250,'Validation', 'FontSize',12)
-% text(tHistory(1)+5,250,'Control', 'FontSize',12)
-% text(tHistory(1)+5,230,'turned on', 'FontSize',12)
-% xlim([0 tHistory(end)])
-% 
-% ph(1) = plot([t;tA(2:end);tU(2:end)],[x(:,1);xA(2:end,1);xU(2:end,1)],'-','Color',ccolors(1,:),'LineWidth',1);
-% ph(2) = plot([t;tA(2:end);tU(2:end)],[x(:,2);xA(2:end,2);xU(2:end,2)],'-','Color',ccolors(2,:),'LineWidth',1);
-% plot([t;tHistory'],zeros(length([t;tHistory']),1),'-k','LineWidth',0.5)
-% plot([t;tHistory'],xref1(1)*ones(length([t;tHistory']),1),'-','Color',ccolors(1,:),'LineWidth',0.5)
-% plot([t;tHistory'],xref1(2)*ones(length([t;tHistory']),1),'-','Color',ccolors(2,:),'LineWidth',0.5)
-% 
-% 
-% switch select_model
-%     case 'DMDc'
-%         plot(tB,xB(:,1),'-.','Color',ccolors(1,:)-[0 0.2 0.2],'LineWidth',2);
-%         plot(tB,xB(:,2),'-.','Color',ccolors(2,:)-[0.1 0.2 0.09],'LineWidth',2);
-%     case 'DelayDMDc'
-%         plot(tB,xB(:,1),'-.','Color',ccolors(1,:)-[0 0.2 0.2],'LineWidth',2);
-%         plot(tB,xB(:,2),'-.','Color',ccolors(2,:)-[0.1 0.2 0.09],'LineWidth',2);
-%     case 'SINDYc'
-%         plot(tC,xC(:,1),'-.','Color',ccolors(1,:)-[0 0.2 0.2],'LineWidth',2);
-%         plot(tC,xC(:,2),'-.','Color',ccolors(2,:)-[0.1 0.2 0.09],'LineWidth',2);
-%     case 'NARX'
-%         plot(tA(1:end),xD(:,1),'-.','Color',ccolors(1,:)-[0 0.2 0.2],'LineWidth',2);
-%         plot(tA(1:end),xD(:,2),'-.','Color',ccolors(2,:)-[0.1 0.2 0.09],'LineWidth',2);
-% end
-% ph(3) = plot(tHistory(1:ct),uHistory(1:ct),'-k','LineWidth',1.5);
-% pt = plot(tHistory(1:ct),xHistory(1,1:ct),'-.','Color',ccolors(1,:)-[0 0.2 0.2],'LineWidth',2);
-% plot(tHistory(1:ct),xHistory(2,1:ct),'-.','Color',ccolors(2,:)-[0.1 0.2 0.09],'LineWidth',2);
-% 
-% xlabel('Time')
-% ylabel('Population size')
-% lh = legend(ph,'Prey','Predator','Control','Location','NorthWest');
-% lh.Position = [lh.Position(1)+0.03 lh.Position(2)-0.16 lh.Position(3:4)];
-% 
-% legend([ph(1),pt],'True',select_model,'Location','NorthEast');
-% axis tight
-% % ylim([min(uHistory)-5 260])
-% ylim([-45 270])
-% xlim([0 300])
-% set(gca,'LineWidth',1, 'FontSize',14)
-% set(gcf,'Position',[100 100 450 200])
-% set(gcf,'PaperPositionMode','auto')
-% print('-depsc2', [figpath,'EX_LOTKA_MPC_',select_model,'.eps']);
 
-
-%%
-% 
-% clear ph pt
-% 
-% ylimval = [-20 270];
-% 
-% figure;
-% 
-% xlabel(gca,'Time')
-% ylabel(gca,'Population size')
-% set(gca,'LineWidth',1, 'FontSize',14)
-% set(gcf,'Position',[100 100 450 200])
-% set(gcf,'PaperPositionMode','auto')
-% 
-% hold on, box on,
-% ccolors = get(gca,'colororder');
-% plot([t(end),t(end)],[-15 260],':','Color',[0.4,0.4,0.4],'LineWidth',1)
-% plot([tA(end),tA(end)],[-15 260],':','Color',[0.4,0.4,0.4],'LineWidth',1)
-% text(5,250,'Training', 'FontSize',12)
-% text(tA(1)+5,250,'Validation', 'FontSize',12)
-% text(tHistory(1)+5,250,'Control', 'FontSize',12)
-% text(tHistory(1)+5,230,'turned on', 'FontSize',12)
-% 
-% ph(1) = plot([t;tA(2:end);tU(2:end)],[x(:,1);xA(2:end,1);xU(2:end,1)],'-','Color',ccolors(1,:),'LineWidth',1);
-% ph(2) = plot([t;tA(2:end);tU(2:end)],[x(:,2);xA(2:end,2);xU(2:end,2)],'-','Color',ccolors(2,:),'LineWidth',1);
-% plot([t;tHistory'],zeros(length([t;tHistory']),1),'-k','LineWidth',0.5)
-% plot([t;tHistory'],xref1(1)*ones(length([t;tHistory']),1),'-','Color',ccolors(1,:),'LineWidth',0.5)
-% plot([t;tHistory'],xref1(2)*ones(length([t;tHistory']),1),'-','Color',ccolors(2,:),'LineWidth',0.5)
-% ph(3) = plot([t;t_valid(2:end-1);tHistory(2:ct)'],[u,u_valid(2:end-1),uHistory(1:ct-1)],'-k','LineWidth',1);
-% 
-% % hold off
-% ax1 = gca;
-% set(ax1,'xlim',[0 tHistory(end)],'ylim',ylimval,'XColor','k','YColor','k');
-% 
-% legend_handle1 = legend(ph,'Prey','Predator','Control','Location','NorthWest','location','NorthWest');
-% legend_handle1.Position = [legend_handle1.Position(1)+0.00 legend_handle1.Position(2)-0.05 legend_handle1.Position(3:4)];
-% 
-% % ax2 = axes('Position',get(ax1,'Position'), 'Visible','off','Color','none');
-% ax2 = axes('Position',get(ax1,'Position'),'xlim',[0 tHistory(end)],'ylim',ylimval,'Visible','off','Color','none');
-% pt(1) = plot([t;tA(2:end);tU(2:end)],[x(:,1);xA(2:end,1);xU(2:end,1)],'-','Color',ccolors(1,:),'LineWidth',1,'Parent',ax2); 
-% hold on
-% switch select_model
-%     case 'DMDc'
-%         plot(tB,xB(:,1),'-.','Color',ccolors(1,:)-[0 0.2 0.2],'LineWidth',2,'Parent',ax2);
-%         plot(tB,xB(:,2),'-.','Color',ccolors(2,:)-[0.1 0.2 0.09],'LineWidth',2,'Parent',ax2);
-%     case 'DelayDMDc'
-%         plot(tB,xB(:,1),'-.','Color',ccolors(1,:)-[0 0.2 0.2],'LineWidth',2,'Parent',ax2);
-%         plot(tB,xB(:,2),'-.','Color',ccolors(2,:)-[0.1 0.2 0.09],'LineWidth',2,'Parent',ax2);
-%     case 'SINDYc'
-%         plot(tC,xC(:,1),'-.','Color',ccolors(1,:)-[0 0.2 0.2],'LineWidth',2,'Parent',ax2);
-%         plot(tC,xC(:,2),'-.','Color',ccolors(2,:)-[0.1 0.2 0.09],'LineWidth',2,'Parent',ax2);
-%     case 'NARX'
-%         plot(tA(1:end),xD(:,1),'-.','Color',ccolors(1,:)-[0 0.2 0.2],'LineWidth',2,'Parent',ax2);
-%         plot(tA(1:end),xD(:,2),'-.','Color',ccolors(2,:)-[0.1 0.2 0.09],'LineWidth',2,'Parent',ax2);
-% end
-% 
-% pt(2) = plot(tHistory(1:ct),xHistory(1,1:ct),'-.','Color',ccolors(1,:)-[0 0.2 0.2],'LineWidth',2,'Parent',ax2);
-% plot(tHistory(1:ct),xHistory(2,1:ct),'-.','Color',ccolors(2,:)-[0.1 0.2 0.09],'LineWidth',2,'Parent',ax2);
-% 
-% set(gca,'xlim',[0 tHistory(end)],'ylim',ylimval,'Visible','off','Color','none')
-% legend_handle2 = legend(gca,pt,'True',select_model,'location','NorthEast');
-% legend_handle2.Position = [legend_handle1.Position(1)+0.27 legend_handle1.Position(2)+0.07 legend_handle2.Position(3:4)];
-% 
-% set(legend_handle2, 'Color', 'none');
-% % set(gca,'xlim',[0 tHistory(end)],'ylim',[-45 270],'Visible','off','Color','none')
-% set(gca,'LineWidth',1, 'FontSize',14)
-% 
-% print('-depsc2', [figpath,'EX_LOTKA_MPC_',select_model,'.eps']);
-
-
-%%
 clear ph pt th
 
 
 xlimval = [0 300];
-% xlimval = [0 tHistory(end)];
 ylimval = [-20 270];
 Jmax = max(cumsum(Results(1).J));
 
@@ -143,11 +18,6 @@ hold on, box on,
 ccolors = get(gca,'colororder');
 
 ModelColors = zeros(2,3,Nmodels);
-% for jM = 1:Nmodels
-%     ModelColors(:,:,iM) = [ ccolors(1,:)-[0 0.2 0.2];
-%                             ccolors(2,:)-[0.1 0.2 0.09]];                
-% end
-
 ModelColors(:,:,1) = [1 0 0; 1 0 0];
 ModelColors(:,:,2) = [0 1 0; 0 1 0];
 ModelColors(:,:,3) = [0.7,0.7,1; 0.7,0.7,1];
@@ -160,12 +30,9 @@ th(2) = text(tA(1)+5,250,'Validation', 'FontSize',12);
 th(3) = text(tHistory(1)+5,250,'Control', 'FontSize',12);
 th(4) = text(tHistory(1)+5,230,'turned on', 'FontSize',12);
 
-% plot(tHistory(2:end),200*cumsum(Results(1).J(2:end))./Jmax,'-','Color',ccolors(end,:))
 ph(1) = plot([t;tA(2:end);tHistory(2:end)'],[x(:,1);xA(2:end,1);xHistory(1,2:end)'],'-','Color',ccolors(1,:),'LineWidth',1);
 ph(2) = plot([t;tA(2:end);tHistory(2:end)'],[x(:,2);xA(2:end,2);xHistory(2,2:end)'],'-','Color',ccolors(2,:),'LineWidth',1);
 plot([t;tHistory'],zeros(length([t;tHistory']),1),'-k','LineWidth',0.5)
-% plot([t;tHistory'],xref1(1)*ones(length([t;tHistory']),1),'-','Color',ccolors(1,:),'LineWidth',0.5)
-% plot([t;tHistory'],xref1(2)*ones(length([t;tHistory']),1),'-','Color',ccolors(2,:),'LineWidth',0.5)
 plot([tHistory'],xref1(1)*ones(length([tHistory']),1),'-','Color',ccolors(1,:),'LineWidth',0.5)
 plot([tHistory'],xref1(2)*ones(length([tHistory']),1),'-','Color',ccolors(2,:),'LineWidth',0.5)
 ph(3) = plot([t;t_valid(2:end-1);tHistory(2:ct)'],[u,u_valid(2:end-1),uHistory(1:ct-1)],'-k','LineWidth',1);
@@ -177,7 +44,6 @@ set(ax1,'xlim',xlimval,'ylim',ylimval,'XColor','k','YColor','k');
 legend_handle1 = legend(ph,'Prey','Predator','Control','Location','NorthWest','location','NorthWest');
 legend_handle1.Position = [legend_handle1.Position(1)+0.00 legend_handle1.Position(2)-0.05 legend_handle1.Position(3:4)];
 
-% ax2 = axes('Position',get(ax1,'Position'), 'Visible','off','Color','none');
 ax2 = axes('Position',get(ax1,'Position'),'xlim',xlimval,'ylim',ylimval,'Visible','off','Color','none');
 pt(1) = plot([t;tA(2:end);tHistory(2:end)'],[x(:,1);xA(2:end,1);xHistory(1,2:end)'],'-','Color',ccolors(1,:),'LineWidth',1,'Parent',ax2); 
 hold on
@@ -201,7 +67,6 @@ legend_handle2 = legend(gca,pt,'True',select_model,'location','NorthEast');
 legend_handle2.Position = [legend_handle1.Position(1)+0.27 legend_handle1.Position(2)+0.07 legend_handle2.Position(3:4)];
 
 set(legend_handle2, 'Color', 'none');
-% set(gca,'xlim',[0 tHistory(end)],'ylim',[-45 270],'Visible','off','Color','none')
 set(gca,'LineWidth',1, 'FontSize',14)
 
 print('-depsc2', '-cmyk', '-loose', [figpath,'EX_LOTKA_MPC_',select_model,'_N_',num2str(N),'.eps']);

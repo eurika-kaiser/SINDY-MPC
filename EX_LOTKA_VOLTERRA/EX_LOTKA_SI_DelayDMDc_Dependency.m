@@ -69,7 +69,7 @@ errBest = inf*ones(N_LENGTHS,N_ETA);
 % BestModels(1:N_LENGTHS,1:N_ETA) = struct('name', [], 'sys', [], 'Ndelay', [], 'Ttraining', [], ...
 %     'dt', [], 'Err', [], 'ErrM', []);
 BestModelsList = zeros(N_LENGTHS,N_ETA);
-         
+
 %% DMDc: B = unknown and with time delay coordinates
 for iN = 1:N_LENGTHS
     for iNoise = 1:N_ETA
@@ -97,9 +97,6 @@ for iN = 1:N_LENGTHS
             
             % Train model
             tic
-            %             numOutputs = size(Hx,1); numInputs = size(Hu,1); numVar = 2;
-            %             r1 = size(Hx,1); r2 = size(Hx,1);
-            %             [sysmodel_DMDc,U,Up] = DelayDMDc_MV(Hx,Hu,size(Hx,1),size(Hx,1),dt,size(Hx,1),size(Hu,1),2);
             [sysmodel_DMDc,U,Up] = DMDc(Hx,Hu,dt);
             telapsed = toc
             
@@ -206,7 +203,7 @@ for iN = 1:N_LENGTHS
                     
                     BestModel = Model;
                     save(fullfile(datapath,['EX_LOTKA_SI_',ModelName,'_',InputSignalType,'_N',sprintf('%04g',Ntrain_vec(iN)),'_Eta',sprintf('%03g',100*eta_vec(iNoise)),'_BEST_MODEL.mat']),'Model')
-
+                    
                     %BestModels(iN,iNoise) = Model;
                     BestModelsList(iN,iNoise) = iR;
                     
@@ -257,9 +254,9 @@ for iN = 1:N_LENGTHS
             end
         end
         
-%         if TRACK_MODEL_BEST == 1
-%             save(fullfile(datapath,['EX_LOTKA_SI_',ModelName,'_',InputSignalType,'_N',sprintf('%04g',Ntrain_vec(iN)),'_Eta',sprintf('%03g',100*eta_vec(iNoise)),'_BEST_MODEL.mat']),'Model')
-%         end
+        %         if TRACK_MODEL_BEST == 1
+        %             save(fullfile(datapath,['EX_LOTKA_SI_',ModelName,'_',InputSignalType,'_N',sprintf('%04g',Ntrain_vec(iN)),'_Eta',sprintf('%03g',100*eta_vec(iNoise)),'_BEST_MODEL.mat']),'Model')
+        %         end
         
         disp('===========================================================')
         disp('===========================================================')

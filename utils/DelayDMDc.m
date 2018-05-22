@@ -3,8 +3,6 @@ stackmax = size(Hx,1);
 
 X = Hx(:,1:end-1);
 Xp = Hx(:,2:end);
-%     [U,S,V] = svd(X,'econ');
-%     figure,semilogy(diag(S))
 Nt = size(X,2);
 Gamma = Hu(:,1:Nt);
 Omega = [X; Gamma];

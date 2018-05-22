@@ -1,11 +1,6 @@
 function dy = lotka(t,y,a,b,d,g)
-% Copyright 2016, All Rights Reserved
-% Code by Steven L. Brunton
-% For Paper, "Sparse Identification of Nonlinear Dynamical Systems with Control"
-% by S. L. Brunton, J. L. Proctor, and J. N. Kutz
-
 dy = [
-a*y(1) - b*y(1)*y(2);
-d*y(1)*y(2) - g*y(2);
-];
+    a*y(1) - b*y(1)*y(2);
+    d*y(1)*y(2) - g*y(2);
+    ];
 

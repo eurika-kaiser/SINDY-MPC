@@ -1,8 +1,4 @@
 function u = prbs(taulim, Nswitch, states, t,Toffset,seed)
-%states = [-1 1];
-%Nswitch = 10;
-%taulim = [0 0.5];
-
 if nargin==6
     rng(seed,'twister')
     

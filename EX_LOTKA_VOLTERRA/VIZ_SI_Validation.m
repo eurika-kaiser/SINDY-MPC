@@ -29,7 +29,6 @@ else
         ylim([0 250])
     end
 end
-% xlabel('Time','FontSize',13)
 ylabel('Prey, x_1','FontSize',13)
 set(gca,'FontSize',13)
 subplot(2,1,2), box on, hold on
@@ -83,7 +82,6 @@ else
     text(tA(1)-50,230,'Training', 'FontSize',12)
     text(10+tA(1),230,'Validation', 'FontSize',12)
 end
-% text(5+tB(1),210,'turned on', 'FontSize',12)
 plot(t,x(:,1),'Color',ccolors(1,:),'LineWidth',1);
 plot(t,x(:,2),'Color',ccolors(2,:),'LineWidth',1);
 ph(1) = plot([t;tA],[x(:,1);xA(:,1)],'Color',ccolors(1,:),'LineWidth',1);
@@ -98,7 +96,6 @@ grid off
 xlim([0 200])
 xlabel('Time')
 ylabel('Population size')
-% legend('Prey (True)','Predator (True)', 'Prey (DMDc)','Predator (DMDc)')
 if exist('xB_sparse')==1
     lh = legend(ph([1,3,5]),'True','DMDc',ModelName);
 else
@@ -115,9 +112,6 @@ clear ph
 figure,box on, hold on, 
 ccolors = get(gca,'colororder');
 plot([tA(1),tA(1)],[-15 260],':','Color',[0.4,0.4,0.4],'LineWidth',1.5)
-% text(tB(1)-50,max([u uv])-0.1*max([u uv]),'Training', 'FontSize',12,'Color','r')
-% text(10+tB(1),max([u uv])-0.1*max([u uv]),'Validation', 'FontSize',12,'Color','r')
-% text(5+tB(1),210,'turned on', 'FontSize',12)
 plot(t,u,'-k','LineWidth',1);
 plot(tv,uv,'-k','LineWidth',1);
 grid off

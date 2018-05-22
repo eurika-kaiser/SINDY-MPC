@@ -112,16 +112,6 @@ for iN = 1:N_LENGTHS
             % Close loop for recursive prediction
             netc = closeloop(net);
             
-            % Train in closed-loop
-            %             % % netc.trainParam.min_grad = 1e-10;
-            %             netc.trainParam.showCommandLine = 1;
-            %             netc.trainParam.showWindow = false;
-            %             % netc.trainParam.epochs = 1000;
-            %
-            %             % % Train net with prepared data in closed-loop
-            %             [Us,Ui,Si,So] = preparets(netc,yi,{},yt);
-            %             netc = train(netc,Us,So,Ui);
-            
             telapsed = toc
             %% Prediction over training phase
             % prepare training data

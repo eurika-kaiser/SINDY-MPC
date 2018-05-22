@@ -1,5 +1,5 @@
 % MPC applied to LOTKA-VOLTERRA system using
-% a SINDYc model.
+% a SINDYc model for different prediction horizon lengths.
 
 
 clear all, close all, clc
@@ -245,44 +245,4 @@ for i = 1:length(Nvec)
     save(fullfile(datapath,['EX_LOTKA_MPC_SINDYc_N',num2str(N),'.mat']),'Results')
     
 end
-return
-%% Timestep
-Ts = 0.1;
-Lotka = @(t,x) [a*x(1)-b*x(1)*x(2);
-    -g*x(2)+d*x(1)*x(2)];
-Duration = 100;
-xnl = x0;
-for i = 1:Duration/Ts
-    xnlnew = rk4u(@lotkacontrol_discrete,xnl(:,end),0,Ts,1,[],p);
-    xnl = [xnl, xnlnew];
-end
-
-[t,xt] = ode45(Lotka,[1:Duration/Ts].*Ts,x0);
-
-figure,
-plot([0:Duration/Ts].*Ts,xnl','-k'), hold on, plot([0:Duration/Ts-1].*Ts,xt,'-r');
-%% Linearization
-xref1 = [g/d,a/b];
-xeq = x0';
-Ts = 0.1;
-Jacobian = @(x)[a-b*x(2) -b*x(1);
-    d*x(2)   d*x(1)-g];
-Lotka = @(x) [a*x(1)-b*x(1)*x(2);
-    -g*x(2)+d*x(1)*x(2)];
-dfdx = Lotka(xeq);
-A = Jacobian(xeq);
-
-sys = ss(A,B,eye(2),0);
-plant = c2d(sys,Ts);
-
-xt = x0;
-xnl = x0;
-for i = 1:1000
-    xtnew = plant.A*(xt(:,end));
-    xt = [xt, xtnew];
-    xnlnew = rk4u(@lotkacontrol_discrete,xnl(:,end),0,Ts,1,[],p);
-    xnl = [xnl, xnlnew];
-end
-figure,
-plot(xnl(:,:)','-k'), hold on, plot(xt'+repmat(xeq,[size(xt',1),1]),'-r');
 return

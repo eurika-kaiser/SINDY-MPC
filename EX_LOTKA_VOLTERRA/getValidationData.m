@@ -1,20 +1,7 @@
 %% Execute this file to collect training data for model identification
 
-% Parameters: Model
-% a = .5;
-% b = .025;
-% d = .005;
-% g = .5;
-% n = 2;
-% x0=[60,50];
-% xref = [g/d;a/b]; % critical point
-
 x0 = x(end,:);
 tspanV =[tspan(end):dt:200];
-
-% Time
-% t=[dt:dt:100];
-
 
 options = odeset('RelTol',1e-10,'AbsTol',1e-10*ones(1,n));
 
@@ -28,27 +15,19 @@ switch InputSignalType
     case 'chirp'
         A = 2;
         forcing = @(x,t) A*chirp(t,[],max(tspanV),1.).^2;
-        %         forcing = @(x,t) 1*chirp(t,[],100-2*roundn(t,1)+0.01,1.);
-        %         forcing = @(x,t) Amp*sawtooth(t,1).*chirp(t,[],max(tspan),1.5); %3.5
         [t_valid,x_valid]=ode45(@(t,x) lotkacontrol(t,x,forcing(x,t),a,b,d,g),tspanV,x0,options);
         u_valid = forcing(0,tspanV);
         
     case 'noise'
-        vareps = 0.01; %0.2
-        %         forcing = @(x,t) Amp*randn(1,1);
+        vareps = 0.01; 
         Diff = @(t,x) [0; vareps];
         SDE = sde(@(t,x) lotkacontrol(t,x,0,a,b,d,g),Diff,'StartState',x0');
         rng(1,'twister')
-        %[xdat,t] = simulate(SDE, N, 'DeltaTime', dt);
         [x_valid, t_valid, u_valid] = simByEuler(SDE, length(tspanV), 'DeltaTime', dt);
         u_valid = u_valid';
         x_valid = x_valid(1:end-1,:); t_valid = t_valid(1:end-1);
-        %         noise = @(t,A)[0;0.0001];
-        %         opts = sdeset('RandSeed',19);
-        %         [x,u] = sde_euler(lotkacontrol(t,x,0,a,b,d,g),noise,tspan,x0,opts);
-        %         t = tspan;
     case 'prbs'
-        A = 1; %0.5;
+        A = 1; 
         taulim = [0.1 5];
         states = [-1 1];
         Nswitch = 300;
@@ -63,8 +42,8 @@ switch InputSignalType
         figure,plot(tspanV,u_valid)
         
     case 'sphs'
-        Pf = 20; %5 % Fundamental period
-        K = 8; %16
+        Pf = 20;  % Fundamental period
+        K = 8; 
         A = 5;
         forcing = @(x,t) A*sphs(Pf,K,t).^2;
         [t_valid,x_valid]=ode45(@(t,x) lotkacontrol(t,x,forcing(x,t),a,b,d,g),tspanV,x0,options);
@@ -111,8 +90,6 @@ legend('Prey','Predator')
 set(gca,'LineWidth',1, 'FontSize',14)
 set(gcf,'Position',[100 100 300 200])
 set(gcf,'PaperPositionMode','auto')
-% print('-depsc2', [figpath,'EX_LOTKA_Dynamics.eps']);
-
 
 T = length(tspanV);
 N = length(tspanV);
@@ -134,5 +111,4 @@ if exist('Ndelay','var') == 1
     elseif length(Ndelay) == 1 && Ndelay==1
         Hu_valid = Hu_valid;
     end
-    % Hu = getHankelMatrix_MV(u',1); Hu = Hu(:,1:Nt);
 end

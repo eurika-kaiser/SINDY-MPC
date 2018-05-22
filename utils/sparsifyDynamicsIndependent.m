@@ -10,7 +10,7 @@ for k=1:10
             keyboard
         end
         smallinds = (abs(Xi(:,ind))<lambda(ind));   % find small coefficients
-        Xi(smallinds,ind)=0;                % and threshold 
+        Xi(smallinds,ind)=0;                        % and threshold 
         biginds = ~smallinds;
         % Regress dynamics onto remaining terms to find sparse Xi
         Xi(biginds,ind) = Theta(:,biginds)\dXdt(:,ind); 

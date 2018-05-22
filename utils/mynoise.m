@@ -1,6 +1,4 @@
 function u = mynoise(t,tspan)
-
-
 rng(0,'twister');
 Nt = length(tspan);
 uall = randn(1,Nt);

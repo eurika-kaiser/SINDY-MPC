@@ -41,27 +41,18 @@ ymax = max([max(cumsum(Data(1).J)) max(cumsum(Data(2).J))])+500;
 ccolors = jet(2*Nn); ccolors = ccolors(1:2:end,:);
 
 figure;hold on, box on,
-% ccolors = get(gca,'colororder');
-% plot([Ton+tspan(1),Ton+tspan(1)],[-15 ymax],':','Color',[0.7,0.7,0.7],'LineWidth',1)
-% text(31+tspan(1),ymax-100,'Control', 'FontSize',12)
-% text(31+tspan(1),ymax-200,'turned on', 'FontSize',12)
 plot([Ton+tspan(1),Ton+tspan(1)],[0.01 ymax],':','Color',[0.7,0.7,0.7],'LineWidth',1)
 t1 = text(51+tspan(1),4.5*10^4,'Control', 'FontSize',12);
 t2 = text(51+tspan(1),4*10^4,'turned on', 'FontSize',12);
 for i = 1:Nn
     ph(i) = plot(Data(i).t+tspan(1),cumsum(Data(i).J),'-','Color',ccolors(i,:),'LineWidth',1.5);
 end
-% ph(1) = plot(Data(1).t+tspan(1),cumsum(Data(1).J),'-k','LineWidth',1.5);
-% ph(2) = plot(Data(2).t+tspan(1),cumsum(Data(2).J),'-.k','LineWidth',1.5);
 xlabel('Time')
 ylabel('Cost')
 legend(ph(1:2:end),num2str(Nvec(1:2:end)'),'Location','eastoutside','Orientation','vertical')
 axis tight
 xlim([100 200]), ylim([0 5*10^4])
 set(gca,'yscale','linear','xscale','linear','xtick',[100,150,200])
-% ylim([-1 ymax])
-% xlim([100,200.0001])
-%ylim([min(uHistory)-5 260])
 set(gca,'xtick',[50,100,150,200])
 set(gca,'LineWidth',1, 'FontSize',14)
 set(gcf,'Position',[100 100 400 245])

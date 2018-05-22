@@ -1,7 +1,6 @@
 clear all, close all, clc
 figpath = '../../FIGURES/'; mkdir(figpath)
 datapath = '../../DATA/EX_LOTKA_Dependencies/'; mkdir(datapath)
-datapath = '/Users/ekaiser/Documents/Academia/Papers/KaKuBr_SINDYc-MPC/DATA/EX_LOTKA_Dependencies/';
 addpath('../utils');
 
 %% Paramaters
@@ -69,7 +68,7 @@ ySINDYc = spline(eta_vec(:),tmp,xx(1:31));
 % for i = 1:N_ETA, tmp(i) = ModelsNARX(i).Err; end
 % yNARX = spline(eta_vec(:),tmp,xx);
 figure, hold on, box on
-plot(xx,yDMDc,'-r','LineWidth',1), hold on, 
+plot(xx,yDMDc,'-r','LineWidth',1), hold on,
 plot(xx(1:31),ySINDYc,'-g','LineWidth',1)
 % plot(xx,yNARX,'-','Color',[0.7,0.7,1],'LineWidth',1)
 for iN = 1:N_LENGTHS
@@ -103,7 +102,7 @@ ySINDYc = spline(eta_vec(:),tmp,xx(1:31));
 % for i = 1:N_ETA, tmp(i) = ModelsNARX(i).ErrM; end
 % yNARX = spline(eta_vec(:),tmp,xx);
 figure, hold on, box on
-plot(xx,yDMDc,'-r','LineWidth',1), hold on, 
+plot(xx,yDMDc,'-r','LineWidth',1), hold on,
 plot(xx(1:31),ySINDYc,'-g','LineWidth',1)
 % plot(xx,yNARX,'-','Color',[0.7,0.7,1],'LineWidth',1)
 for iN = 1:N_LENGTHS

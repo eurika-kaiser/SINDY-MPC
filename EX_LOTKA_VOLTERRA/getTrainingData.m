@@ -10,24 +10,17 @@ n = 2;
 x0=[60,50];
 xref = [g/d;a/b]; % critical point
 
-
 dt = 0.1;
-
-
 
 if ONLY_TRAINING_LENGTH == 1
     % Training
     tspan=[0:dt:200];
-    Ntrain = 1001;%ceil(length(tspan)/2);
+    Ntrain = 1001;
 else
     % Noise
     tspan=[0:dt:400];
-    Ntrain = 3001;%ceil(length(tspan)/2);
+    Ntrain = 3001;
 end
-
-% Time
-% t=[dt:dt:100];
-
 
 options = odeset('RelTol',1e-10,'AbsTol',1e-10*ones(1,n));
 
@@ -41,27 +34,19 @@ switch InputSignalType
     case 'chirp'
         A = 2;
         forcing = @(x,t) A*chirp(t,[],max(tspan),1.).^2;
-        %         forcing = @(x,t) 1*chirp(t,[],100-2*roundn(t,1)+0.01,1.);
-        %         forcing = @(x,t) Amp*sawtooth(t,1).*chirp(t,[],max(tspan),1.5); %3.5
         [t,x]=ode45(@(t,x) lotkacontrol(t,x,forcing(x,t),a,b,d,g),tspan,x0,options);
         u = forcing(0,tspan);
         
     case 'noise'
-        vareps = 0.01; %0.2
-        %         forcing = @(x,t) Amp*randn(1,1);
+        vareps = 0.01; 
         Diff = @(t,x) [0; vareps];
         SDE = sde(@(t,x) lotkacontrol(t,x,0,a,b,d,g),Diff,'StartState',x0');
         rng(1,'twister')
-        %[xdat,t] = simulate(SDE, N, 'DeltaTime', dt);
         [x, t, u] = simByEuler(SDE, length(tspan), 'DeltaTime', dt);
         u = u';
         x = x(1:end-1,:); t = t(1:end-1);
-        %         noise = @(t,A)[0;0.0001];
-        %         opts = sdeset('RandSeed',19);
-        %         [x,u] = sde_euler(lotkacontrol(t,x,0,a,b,d,g),noise,tspan,x0,opts);
-        %         t = tspan;
     case 'prbs'
-        A = 1; %0.5;
+        A = 1; 
         taulim = [0.1 5];
         states = [-1 1];
         Nswitch = 300;
@@ -76,8 +61,8 @@ switch InputSignalType
         figure,plot(tspan,u)
         
     case 'sphs'
-        Pf = 20; %5 % Fundamental period
-        K = 8; %16
+        Pf = 20;  % Fundamental period
+        K = 8; 
         A = 5;
         forcing = @(x,t) A*sphs(Pf,K,t).^2;
         [t,x]=ode45(@(t,x) lotkacontrol(t,x,forcing(x,t),a,b,d,g),tspan,x0,options);
@@ -115,7 +100,6 @@ end
 
 
 %% Split into training and validation data set
-%Ntrain = ceil(length(tspan)/2);
 xv = x(Ntrain+1:end,:);
 x = x(1:Ntrain,:);
 
@@ -140,14 +124,10 @@ legend('Prey','Predator')
 set(gca,'LineWidth',1, 'FontSize',14)
 set(gcf,'Position',[100 100 300 200])
 set(gcf,'PaperPositionMode','auto')
-% print('-depsc2', [figpath,'EX_LOTKA_Dynamics.eps']);
 
 
 T = length(tspan);
 N = length(tspan);
-% xold = x;
-% xmean = mean(xold(5000:T,:));
-% xmean = mean(xold);
 xmean = xref';
 
 %% Time delay data
@@ -167,5 +147,4 @@ if exist('Ndelay','var') == 1
     elseif length(Ndelay) == 1 && Ndelay==1
         Hu = Hu;
     end
-    % Hu = getHankelMatrix_MV(u',1); Hu = Hu(:,1:Nt);
 end

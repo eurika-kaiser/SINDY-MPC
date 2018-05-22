@@ -42,9 +42,8 @@ clear ph
 figure, hold on, box on
 ccolors = get(gca,'colororder');
 plot(x(:,1), x(:,2),'-k','LineWidth',1);
-axis equal, axis tight, %axis off
+axis equal, axis tight, 
 set(gca,'xtick', [], 'ytick', [])
-% xlim([0 max(ResultsALL(iM).DataTrain.t)]), ylim([0 100])
 set(gca,'LineWidth',1, 'FontSize',14)
 set(gcf,'Position',[100 100 300 150])
 set(gcf,'PaperPositionMode','auto'),
@@ -55,16 +54,13 @@ ccolors = [1 0 0; 0 1 0; 0.7,0.7,1];
 figure, hold on, box on
 plot(x(:,1), x(:,2),'-','Color','k','LineWidth',1.2);
 plot(xSINDYc(:,1), xSINDYc(:,2),'--','Color',ccolors(2,:),'LineWidth',1.2);
-% h = color_line3(xSINDYc(:,1), xSINDYc(:,2), zeros(size(xSINDYc(:,2))),sum((x-xSINDYc).^2,2));
 axis equal, axis tight, %axis off
 set(gca,'xtick', [], 'ytick', [])
-% xlim([0 max(ResultsALL(iM).DataTrain.t)]), ylim([0 100])
 set(gca,'LineWidth',1, 'FontSize',14)
 set(gcf,'Position',[100 100 300 150])
 set(gcf,'PaperPositionMode','auto'),
 print('-depsc2', '-painters', '-loose', '-cmyk', [figpath,'EX_LOTKA_',InputSignalType,'_PhasePlot','_MODEL.eps']);
 
-return
 clear ph
 figure, hold on, box on
 ccolors = get(gca,'colororder');
@@ -72,14 +68,12 @@ iM = 1;
 plot(tspan, u,'-k','LineWidth',1);
 axis equal, axis tight, %axis off
 set(gca,'xtick', [], 'ytick', [])
-% xlim([0 max(ResultsALL(iM).DataTrain.t)]), ylim([0 100])
 set(gca,'LineWidth',1, 'FontSize',14)
 set(gcf,'Position',[100 100 300 50])
 set(gcf,'PaperPositionMode','auto'),
 print('-depsc2', '-painters', '-loose', '-cmyk', [figpath,'EX_LOTKA_',InputSignalType,'_Actuation','_TRUTH.eps']);
 
 
-return
 %% Show validation
 clear ph
 figure,box on,
@@ -120,8 +114,6 @@ else
 end
 %% Show training and prediction
 VIZ_SI_Validation
-
-%% Error // TODO
 
 %% Save Data
 Model.name = 'SINDYc';

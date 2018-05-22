@@ -1,6 +1,5 @@
 function Xi = NonlinearSparseRegression(x,u,dt,options_method,lambda)
 
-
 Ninputs = min(size(u));
 %% Compute Derivative
 % compute derivative using fourth order central difference
@@ -17,7 +16,7 @@ dx(:,size(x,2)+1:size(x,2)+Ninputs) = repmat(0*dx(:,size(x,2)),[1,Ninputs]);
 
 n = size(dx,2);
 
-% Sparse regression
+%% Sparse regression
 clear Theta Xi
 Theta = poolData(xaug,n,options_method.order,options_method.usesine);
 Xi = sparsifyDynamics(Theta,dx,lambda,n);

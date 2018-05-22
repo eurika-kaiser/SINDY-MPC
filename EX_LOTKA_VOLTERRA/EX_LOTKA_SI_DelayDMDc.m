@@ -8,7 +8,7 @@ addpath('../utils');
 
 %% Generate Data
 InputSignalType = 'sine2';%prbs; chirp; noise; sine2; sphs; mixed
-Ndelay = 1;%35;%35;
+Ndelay = 1;
 getTrainingData
 
 
@@ -28,16 +28,6 @@ r1 = size(Hx,1); r2 = size(Hx,1);
 xDMDc = xDMDc(:,end-1:end);
 xDMDc = xDMDc + repmat(xmean,[Nt 1]);
 
-% Ns = 2;
-% xDMDc = zeros(2*Ns,Nt);
-% xDMDc(:,1) = Hx(:,1);
-% for ct=1:Nt-1
-%     % Obtain plant state at next prediction step.
-%     xDMDc(:,ct+1) = sysmodel_DMDc.A*xDMDc(:,ct) + sysmodel_DMDc.B*Hu(:,ct); %[Hx(1:2,ct); xDMDc(3:4,ct)]
-% end
-% xDMDc = xDMDc(3:4,:);
-% xDMDc = xDMDc + repmat(xmean',[1 Nt]);
-% xDMDc = xDMDc';
 
 %% Show validation
 clear ph
@@ -50,7 +40,6 @@ ph(4) = plot(tspan(Ndelay:Nt+Ndelay-1),xDMDc(:,2),'--','Color',ccolors(2,:)-[0.1
 xlim([0 100])
 xlabel('Time')
 ylabel('Population size')
-% legend('Prey (True)','Predator (True)', 'Prey (DMDc)','Predator (DMDc)')
 legend(ph([1,3]),'True',ModelName)
 set(gca,'LineWidth',1, 'FontSize',14)
 set(gcf,'Position',[100 100 300 200])

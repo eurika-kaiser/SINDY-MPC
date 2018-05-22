@@ -22,20 +22,7 @@ if any(strcmp(InputSignalType,{'sine2', 'chirp','prbs', 'sphs','mixed', 'noise',
     % concatenate
     xnew = [x(3:end-3,:,:)];
     unew = [u(3:end-3,:,:)];
-    
-    % Using system model
-%     dx = zeros(size(x));
-%     for iIC = 1:Nic
-%     
-%     for i=1:Nt
-%         dx(i,:,iIC) = HIVsys_KWON(0,x(i,:,iIC),u(i,1,iIC));
-%     end
-%     end
-%     
-%     % concatenate
-%     xnew = [x];
-%     unew = u;
-    
+
     disp(['DONE: computed derivative'])
 else %excitation using Gaussian white noise
 

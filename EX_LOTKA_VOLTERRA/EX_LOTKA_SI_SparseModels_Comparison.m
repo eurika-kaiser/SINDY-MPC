@@ -416,7 +416,6 @@ disp(['          sparseDMDc: ', num2str(sparseDMDc_err)])
 %% Show training and prediction
 VIZ_SI_Validation
 
-return
 %% Save Data
 Model.name = 'sparseDMDc';
 Model.sys = sysmodel_DMDc;

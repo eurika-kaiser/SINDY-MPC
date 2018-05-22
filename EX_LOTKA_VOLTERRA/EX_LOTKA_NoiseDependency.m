@@ -99,7 +99,7 @@ for i = 1:length(eps_vec)
     xlabel('Time')
     ylabel('Slope of population size')
     if i == 1
-    legend('Prey (clean)','Predator (clean)','Prey (TVRegDiff)','Predator (TVRegDiff)','Location','SouthEast')
+        legend('Prey (clean)','Predator (clean)','Prey (TVRegDiff)','Predator (TVRegDiff)','Location','SouthEast')
     end
     ylim([-100 50])
     set(gca,'LineWidth',1, 'FontSize',14)
@@ -120,7 +120,7 @@ for i = 1:length(eps_vec)
     xlabel('Time')
     ylabel('Population size')
     if i == 1
-    legend('Prey (corrupted)','Predator (corrupted)','Prey (clean)','Predator (clean)','Prey (TVRegDiff)','Predator (TVRegDiff)')
+        legend('Prey (corrupted)','Predator (corrupted)','Prey (clean)','Predator (clean)','Prey (TVRegDiff)','Predator (TVRegDiff)')
     end
     ylim([0 150])
     set(gca,'LineWidth',1, 'FontSize',14)
@@ -165,8 +165,8 @@ for i = 1:length(eps_vec)
     plot(tB,xB(:,2),'r--','LineWidth',1.5)
     plot(tB,xC(:,2),'b-.','LineWidth',1.5)
     if i == 1
-    l1=legend('Training','Validation','SINDYc (clean)', 'SINDYc (TVRegDiff)');
-    set(l1,'Location','NorthWest')
+        l1=legend('Training','Validation','SINDYc (clean)', 'SINDYc (TVRegDiff)');
+        set(l1,'Location','NorthWest')
     end
     grid on
     ylim([0 60])
