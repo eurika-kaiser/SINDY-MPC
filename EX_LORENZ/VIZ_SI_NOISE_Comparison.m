@@ -1,10 +1,12 @@
+% LORENZ system
+% Visualization for dependency on noise level
+
 clear all, close all, clc
 
 SystemModel = 'LORENZ';
 
 figpath = '../../FIGURES/'; mkdir(figpath)
-% datapath = '../../DATA/EX_',SystemModel,'_Dependencies/';
-datapath = ['/Users/ekaiser/Documents/Academia/Papers/KaKuBr_SINDYc-MPC/WORKING/DATA/EX_',SystemModel,'_Dependencies/'];
+datapath = '../../DATA/EX_',SystemModel,'_Dependencies/';
 addpath('../utils');
 
 %% Paramaters
@@ -23,7 +25,6 @@ Nt = 1000; % length(tv);
 Nvar = 3;
 %% Load all models
 ResultsALL(1:Nmodels,3) = struct('err', zeros(Nr,1), 'errM', zeros(Nr,1), 'xA', zeros(Nt,Nvar), 'xB', zeros(Nt,Nvar,Nr),'Ttraining',zeros(Nr,1));
-
 
 count = 0;
 for iN = 1:N_LENGTHS
@@ -103,8 +104,6 @@ print('-depsc2', '-painters', '-loose', '-cmyk', [figpath,'EX_',SystemModel,'_PR
 % l1 = legend(ph,'DMDc','SINDYc','NARX');
 l1 = legend(ph,'SINDYc','NARX');
 set(l1,'Location','NorthWest')
-% l1.Position = [l1.Position(1)-0.06 l1.Position(2)-0.07 l1.Position(3)-0.01 l1.Position(4)];
-% l1.Position = [l1.Position(1)+0.08 l1.Position(2)-0.08 l1.Position(3)-0.01 l1.Position(4)];
 l1.Position = [l1.Position(1)-0.01 l1.Position(2)+0.02 l1.Position(3)-0.01 l1.Position(4)];
 print('-depsc2', '-painters', '-loose', '-cmyk', [figpath,'EX_',SystemModel,'_PREDPERF_',InputSignalType,'_N',sprintf('%04g',Ntrain_vec(iN)),'_noise_',NARXtraining,'.eps']);
 
@@ -231,10 +230,6 @@ for iM = 2:3
     end
 end
 
-
-
-
-
 %% Training time
 LOG_SCALE = 1;
 data2plot = zeros(Nr,N_ETA,3);
@@ -291,21 +286,6 @@ for iM = 2:3
         end
     end
 end
-% iNoise = 1; iM = 3;
-% figure, hold on, box on
-% plot(PredHor_Max(:,iNoise,iM),'-k')
-% plot(PredHor_Ball(:,iNoise,iM),'--r')
-% plot(100*Err_Ratio(:,iNoise,iM),'-.g')
-% 
-% figure, hold on
-% for iR = 1:Nr
-%     plot(ResultsALL(iNoise,iM).xB(:,:,iR),'-k')
-% end
-% 
-% plot(ResultsALL(iNoise,iM).xB(:,:,2),'-.m')
-% plot(ResultsALL(iNoise,iM).xB(:,:,3),'-.g')
-% plot(ResultsALL(iNoise,iM).xB(:,:,4),'-.b')
-% plot(ResultsALL(iNoise,iM).xA,'--r')
 
 %%
 data2plot = (PredHor_Ball).*dt;

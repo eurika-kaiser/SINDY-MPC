@@ -6,9 +6,7 @@ WORKING = 1;
 SystemModel = 'LORENZ';
 
 figpath = '../../FIGURES/LORENZ/'; mkdir(figpath)
-% datapath = '../../DATA/';
-% datapath = '/Users/ekaiser/Documents/Academia/Papers/KaKuBr_SINDYc-MPC/DATA/';
-datapath = '/Users/ekaiser/Documents/Academia/Papers/KaKuBr_SINDYc-MPC/WORKING/DATA/';
+datapath = '../../DATA/';
 addpath('../utils');
 
 %% Load Models
@@ -19,10 +17,13 @@ TrainAlg = 'trainbr'; %trainlm,trainbr
 dep_trainlength = 1;
 dep_noise = 0;
 
+%% Select case
+% 1) Dependency on training length, zero noise level
 % Ntrain_vec = [5:15,20:5:95,100:100:1000];%,1500:500:3000];
 % eta_vec = 0.0;
 % Nr = 1;
 
+% 2) Dependency on training length for fixed noise level
 Ntrain_vec = [5:15,20:5:95,100:100:1000,1250,1500,2000,3000];%,1500:500:3000];
 eta_vec = 0.05;
 Nr = 1;
@@ -47,13 +48,6 @@ datapath1 = [datapath,'EX_',SystemModel,'_Dependencies/',ModelName,'/',TrainAlg,
 load(fullfile(datapath1,['EX_',SystemModel,'_MPC_',ModelName,'_',InputSignalType,'_TrainLength','.mat']))
 ResultsALL(:,3) = Results;
 
-%% Correct cost
-% Q = [1,1]; R = 0.5; Ru = 0.5;
-% for iM = 2:Nmodels
-%     for iL = 1:N_LENGTHS
-%         ResultsALL(iL,iM).J = evalObjectiveFCN(ResultsALL(iL,iM).u,ResultsALL(iL,iM).x,ResultsALL(iL,iM).xref,diag(Q),R,Ru);
-%     end
-% end
 
 %% Show trajectories
 cb_hrzntl = 1;
@@ -65,8 +59,6 @@ for jModel = 2:Nmodels
         plot3(ResultsALL(iM,jModel).x(1,:),ResultsALL(iM,jModel).x(2,:),ResultsALL(iM,jModel).x(3,:),'-','Color',cmap(iM,:),'LineWidth',1)
     end
     plot3(ResultsALL(iM,jModel).xref(1,1),ResultsALL(iM,jModel).xref(2,1),ResultsALL(iM,jModel).xref(3,1),'ok','MarkerFaceColor','k')
-    %     axis equal
-    %ylim([-20 100]), xlim([0 200])
     view(30,20)
     colormap(cmap),
     ch = colorbar;
@@ -156,8 +148,7 @@ print('-depsc2', '-painters', '-loose', '-cmyk', [figpath,'EX_',SystemModel,'_CT
 legend('off')
 print('-depsc2', '-painters', '-loose', '-cmyk', [figpath,'EX_',SystemModel,'_CTRLPERF_',InputSignalType,'_Eta',sprintf('%03g',100*eta_vec),'_TrainingLength_ExecTime','_noleg.eps']);
 
-%% Add penalization
-%Q = 1*eye(2); %20
+%% Flag unconverged results
 for iM = 2:Nmodels
     for iL = 1:N_LENGTHS
        if ResultsALL(iL,iM).t(end) == 0
@@ -170,16 +161,6 @@ for iM = 2:Nmodels
     end
 end
 
-
-
-% for iM = 1:Nmodels
-%     for iL = 1:N_LENGTHS
-%        
-%        if ResultsALL(iL,iM).t(end) == 0
-%            ResultsALL(iL,iM).J(end) = 10^10;
-%        end
-%     end
-% end
 %% Show Performance over training lengths
 clear ph
 ccolors = [1 0 0; 0 1 0; 0.7,0.7,1];
@@ -194,7 +175,6 @@ Jend = cell(Nmodels,1);
 xJend = cell(Nmodels,1);
 
 for iM = 2:Nmodels
-%     Jend{iM} = zeros(length(N_LENGTHS),Nmodels);
     count = 0;
     for iL = 1:N_LENGTHS,
         tmp = cumsum(ResultsALL(iL,iM).J);
@@ -222,9 +202,6 @@ fillh1.EdgeColor = 0.9*ones(1,3); fillh1.FaceAlpha = 0.5;
 plot(Ntrain_vec,JendAll(idx_best,2)*ones(size(Ntrain_vec)),'-','Color',ccolors(2,:),'LineWidth',1)
 
 for iM = 2:Nmodels
-%     if iM <= Nmodels
-%         plot(xx,yModel(:,iM),'-','Color',ccolors(iM,:), 'LineWidth',1, 'LineStyle',lstyles{iM}), hold on,
-%     end
     ph(iM) = plot(Ntrain_vec,JendAll(:,iM),symbols{iM},'Color',ccolors(iM,:),'MarkerFaceColor',ccolors(iM,:),'MarkerSize',4);
 end
 ph(1) = [];
@@ -239,10 +216,6 @@ elseif eta_vec == 0.05
 end
 xlim([4 3001])
 ylim([1.8*10^4 5*10^5])
-% ylim([5*10^2 1.5*10^4])
-% ylim([1*10^2 10^5])
-% ylim([5*10^3 10^7])
-% set(gca,'YScale','log')
 set(gca,'XScale','log','YScale','log', 'ytick', [10^4,10^5,10^7], 'xtick', [10^0,10^1,10^2,10^3]) %[10^3,5*10^3,10^4]
 xlabel('Length of Training Data');
 ylabel('Cost')
@@ -280,13 +253,6 @@ for iM = 2:Nmodels
    end
    [~,BestModelIDX(iM)] = min(Jend(:,iM));
 end
-
-% [val,idx1] = min(abs(Jend(:,1)-9.0601e+03))
-% Ntrain_vec(idx1)
-% [val,idx2] = min(abs(Jend(:,2)-8.6595e+03))
-% Ntrain_vec(idx2)
-% [val,idx3] = min(abs(Jend(:,3)-8.9236e+03))
-% Ntrain_vec(idx3)
 
 ccolors = [1 0 0; 0 1 0; 0.7,0.7,1];
 lstyles = {'-', '--', '-.'};
@@ -340,7 +306,6 @@ if eta_vec == 0
 elseif eta_vec == 0.05
     ylim([1*10^4 3*10^4])
 end
-% set(gca,'yscale','linear','ytick',[7*10^3,8*10^3,9*10^3],'yticklabels',{'70','80','90'})
 xlabel('Time'), ylabel('Cost')
 set(gca,'LineWidth',1, 'FontSize',14)
 set(gcf,'Position',[100 100 300 100])
@@ -354,8 +319,6 @@ for iM = 2:Nmodels
     plot(Ntrain_vec,ones(size(Ntrain_vec)),'-','Marker',symbols{iM},'Color',ccolors(iM,:),'MarkerFaceColor',ccolors(iM,:))
 end
 
-% xlabel('Length of Training Data');
-% ylabel('Cost')
 axis off
 lh = legend(ModelCollection{2:3},'Location','NorthEast');
 lh.Location = 'NorthOutside';
@@ -368,7 +331,7 @@ print('-depsc2', '-painters', '-loose', '-cmyk', [figpath,'EX_',SystemModel,'_CT
 
 
 return
-%%
+%% TESTING
 
 % [~,idx_best_DMDc] = min(JendAll(:,1));
 % % plot(Ntrain_vec,JendAll(idx_best,2)*ones(size(Ntrain_vec)),'-','Color',ccolors(2,:),'LineWidth',1)
@@ -404,33 +367,4 @@ plot(ResultsALL(end,iM).t,cumsum(ResultsALL(iL,iM).J),'--r','LineWidth',1)
 figure, hold on
 plot(ResultsALL(end,2).t,ResultsALL(end,2).u,'-k','LineWidth',1)
 plot(ResultsALL(end,iM).t,ResultsALL(iL,iM).u,'--r','LineWidth',1)
-
-%% TESTING
-figure,hold on
-for iM = 1:Nmodels
-    Jend = cumsum(ResultsALL(iM,1).J);
-    semilogx(Ntrain_vec(iM),Jend(end),'or')
-    Jend = cumsum(ResultsALL(iM,2).J);
-    semilogx(Ntrain_vec(iM),Jend(end),'og')
-    Jend = cumsum(ResultsALL(iM,3).J);
-    semilogx(Ntrain_vec(iM),Jend(end),'ob')
-end
-
-%%
-figure,hold on
-for iM = 1:Nmodels
-    Jend = cumsum(ResultsALL(iM,1).J);
-    plot3(Ntrain_vec(iM).*ones(size(Jend)),ResultsALL(iM,1).t,Jend,'-r')
-end
-
-%%
-Jend = zeros(Nmodels,1);
-for iM = 1:Nmodels
-    tmp = cumsum(ResultsALL(iM,1).J); Jend(iM) = tmp(end);
-end
-
-figure,plot(Jend)
-
-figure,plot(ResultsALL(3,1).x(1,:))
-figure,plot(ResultsALL(3,1).u)
 

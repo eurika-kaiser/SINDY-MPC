@@ -23,7 +23,6 @@ if shaded_region == 1
     fillh1 = fill([0.1 11.9 11.9 0.1], [10 10 ylimregion.*ones(1,2)],0.9*ones(1,3));
     fillh1.EdgeColor = 0.9*ones(1,3); fillh1.FaceAlpha = 0.5; 
 end
-% ph(1)=plot(xx,yy(1,:),'-r','LineWidth',1); hold on,
 ph(2)=plot(xx(1:end),yy(2,1:end),'-g','LineWidth',1);
 ph(3)=plot(xx(1:end),yy(3,1:end),'-','Color',[0.7,0.7,1],'LineWidth',1);
 ph(1) = [];
@@ -62,12 +61,11 @@ set(gcf,'Position',[100 100 300 200])
 set(gcf,'PaperPositionMode','auto'), 
 print('-depsc2', '-painters', '-loose', '-cmyk', [figpath,'EX_',SystemModel,'_PREDPERF_',InputSignalType,'_N',sprintf('%04g',Ntrain_vec(iN)),'_noise_',NARXtraining,'_',PostName,'_noleg.eps']);
 
-% l1 = legend(ph,'DMDc','SINDYc','NARX');
 l1 = legend(ph,'SINDYc','NARX');
 if exist('LegLoc')==1
     set(l1,'Location',LegLoc)
 else
-    set(l1,'Location','NorthWest')%'NorthWest')SouthEast
+    set(l1,'Location','NorthWest')
     l1.Position = [l1.Position(1)-0.01 l1.Position(2)+0.02 l1.Position(3)-0.01 l1.Position(4)];
 end
 print('-depsc2', '-painters', '-loose', '-cmyk', [figpath,'EX_',SystemModel,'_PREDPERF_',InputSignalType,'_N',sprintf('%04g',Ntrain_vec(iN)),'_noise_',NARXtraining,'_',PostName,'.eps']);

@@ -1,11 +1,3 @@
-% switch ModelName
-%     case 'SINDYc'
-%         xData = xSINDYc;
-%     case 'NARX'
-%         xData = xNARX;
-%     case 'DMDc'
-%         xData = xDMDc;
-% end
 
 
 %%

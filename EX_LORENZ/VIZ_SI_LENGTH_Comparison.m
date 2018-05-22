@@ -1,31 +1,34 @@
+% LORENZ system
+% Visualization for dependency on training length
+
+
 clear all, close all, clc
 SystemModel = 'LORENZ';
 
 figpath = '../../FIGURES/'; mkdir(figpath)
-%datapath = ['../../DATA/EX_',SystemModel,'_Dependencies/'];
-datapath = ['/Users/ekaiser/Documents/Academia/Papers/KaKuBr_SINDYc-MPC/WORKING/DATA/EX_',SystemModel,'_Dependencies/'];
+datapath = ['../../DATA/EX_',SystemModel,'_Dependencies/'];
 addpath('../utils');
 
-%_shouldhavebeen_lm
 %% Paramaters
 NARXtraining = 'trainlm'; %'trainlm',trainbr
 InputSignalType = 'sphs'; %sphs,sine2
 
-% Noise
+%% Select case
+% 1) Dependency on noise level
 % Ntrain_vec = 1000; %1000;
 % eta_vec = [0.01 0.05 0.1 0.15 0.2 0.25 0.3 0.35 0.4 0.45 0.5];
 % Nr = 50;
 
-% Training length
+% 2) Dependency on training length
 Ntrain_vec = [5:15,20:5:95,100:100:1000];%,1500:500:3000];
 eta_vec = 0;
 Nr = 1;
 
+%% Parameters
 N_ETA = length(eta_vec);
 N_LENGTHS = length(Ntrain_vec);
 Nmodels = N_ETA*N_LENGTHS;
-
-Nt = 1000; % length(tv);
+Nt = 1000;
 
 LOG_SCALE = 1;
 %% Load all models
@@ -60,7 +63,7 @@ ph(2) = plot(ResultsALL(iM).DataTrain.t, ResultsALL(iM).DataTrain.x(:,2),'-','Co
 ph(3) = plot(ResultsALL(iM).DataTrain.t, ResultsALL(iM).DataTrain.x(:,3),'-','Color',ccolors(3,:),'LineWidth',1);
 
 xlim([0 max(ResultsALL(iM).DataTrain.t)]), ylim([-25 60])
-xlabel('Time'); 
+xlabel('Time');
 ylabel('xi')
 set(gca,'LineWidth',1, 'FontSize',14)
 set(gcf,'Position',[100 100 300 150])
@@ -109,9 +112,9 @@ for iM = 2:3
     plot(ResultsALL(iM).DataTrain.t(ResultsALL(iM).Ntrain_vec), ResultsALL(iM).err(:,2),'--','Color',ccolors(iM,:),'LineWidth',1);
 end
 ph(1) = [];
-xlim([0 max(ResultsALL(iM).DataTrain.t)]), 
+xlim([0 max(ResultsALL(iM).DataTrain.t)]),
 %ylim([0 12000])
-xlabel('Training Time'); 
+xlabel('Training Time');
 ylabel('MSE')
 set(gca,'LineWidth',1, 'FontSize',14)
 set(gcf,'Position',[100 100 300 150])
@@ -136,9 +139,9 @@ for iM = 2:3
 end
 ph(1) = [];
 
-xlim([0 max(ResultsALL(iM).DataTrain.t)]), 
+xlim([0 max(ResultsALL(iM).DataTrain.t)]),
 ylim([0 4000])
-xlabel('Training Time'); 
+xlabel('Training Time');
 ylabel('MSE')
 set(gca,'LineWidth',1, 'FontSize',14)
 set(gcf,'Position',[100 100 300 150])
@@ -167,7 +170,7 @@ for iM = 2:3
 end
 ph(2) = [];
 
-xlim([0 max(ResultsALL(iM).DataTrain.t)]), 
+xlim([0 max(ResultsALL(iM).DataTrain.t)]),
 
 % if log scale
 if LOG_SCALE
@@ -176,7 +179,7 @@ if LOG_SCALE
     set(gca,'ytick',[10.^[2:2:7]])
 end
 
-xlabel('Training Time'); 
+xlabel('Training Time');
 ylabel('MSE')
 set(gca,'LineWidth',1, 'FontSize',14)
 set(gcf,'Position',[100 100 300 150])
@@ -204,7 +207,7 @@ end
 ph(1) = [];
 
 xlim([0 max(ResultsALL(iM).DataTrain.t)]), %ylim([0 6])
-xlabel('Training Time'); 
+xlabel('Training Time');
 ylabel('Avg. Rel. Error')
 set(gca,'LineWidth',1, 'FontSize',14)
 set(gcf,'Position',[100 100 300 150])
@@ -228,7 +231,7 @@ for iM = 2:3
 end
 ph(1) = [];
 xlim([0 max(ResultsALL(iM).DataTrain.t)]), %ylim([0 6])
-xlabel('Training Time'); 
+xlabel('Training Time');
 ylabel('Avg. Rel. Error')
 set(gca,'LineWidth',1, 'FontSize',14)
 set(gcf,'Position',[100 100 300 150])
@@ -265,7 +268,7 @@ if LOG_SCALE
     set(gca,'ytick',[10.^[0:2:6]])
 end
 
-xlabel('Training Time'); 
+xlabel('Training Time');
 ylabel('Avg. Rel. Error')
 set(gca,'LineWidth',1, 'FontSize',14)
 set(gcf,'Position',[100 100 300 150])
@@ -291,7 +294,7 @@ end
 ph(1) = [];
 
 xlim([0 max(ResultsALL(iM).DataTrain.t)]), %ylim([0 6])
-xlabel('Training Length'); 
+xlabel('Training Length');
 ylabel('Training Time [s]')
 
 % if log scale
@@ -326,7 +329,7 @@ end
 ph(1) = [];
 
 xlim([0 max(ResultsALL(iM).DataTrain.t)]), %ylim([0 6])
-xlabel('Training Length'); 
+xlabel('Training Length');
 ylabel('Prediction horizon')
 
 
@@ -356,7 +359,7 @@ end
 ph(1) = [];
 
 xlim([0 max(ResultsALL(iM).DataTrain.t)]), %ylim([0 6])
-xlabel('Training Length'); 
+xlabel('Training Length');
 ylabel('Prediction horizon')
 
 % if log scale

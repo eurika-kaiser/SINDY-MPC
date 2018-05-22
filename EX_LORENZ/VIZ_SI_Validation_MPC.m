@@ -1,3 +1,5 @@
+% Visualize MPC results
+
 uval = -25;
 u_data = ([u,u_valid(2:end-1),uHistory(1:ct-1)]./10)+uval;
 %%
@@ -21,11 +23,6 @@ hold on, box on,
 ccolors = get(gca,'colororder');
 
 ModelColors = zeros(3,3,Nmodels);
-% for jM = 1:Nmodels
-%     ModelColors(:,:,iM) = [ ccolors(1,:)-[0 0.2 0.2];
-%                             ccolors(2,:)-[0.1 0.2 0.09]];                
-% end
-
 ModelColors(:,:,1) = [1 0 0; 1 0 0; 1 0 0];
 ModelColors(:,:,2) = [0 1 0; 0 1 0; 0 1 0];
 ModelColors(:,:,3) = [0.7,0.7,1; 0.7,0.7,1; 0.7,0.7,1];
@@ -41,14 +38,11 @@ th(4) = text(tHistory(1)+5,230,'turned on', 'FontSize',12);
 
 plot([t;t_valid(2:end-1);tHistory(2:ct)'],uval.*ones(size([t;t_valid(2:end-1);tHistory(2:ct)'])),'-k','LineWidth',0.5);
 ph(4) = plot([t;t_valid(2:end-1);tHistory(2:ct)'],u_data,'-k','LineWidth',1);
-% plot(tHistory(2:end),200*cumsum(Results(1).J(2:end))./Jmax,'-','Color',ccolors(end,:))
 ph(1) = plot([t;tA(2:end);tHistory(2:end)'],[x(:,1);xA(2:end,1);xHistory(1,2:end)'],'-','Color',ccolors(1,:),'LineWidth',1);
 ph(2) = plot([t;tA(2:end);tHistory(2:end)'],[x(:,2);xA(2:end,2);xHistory(2,2:end)'],'-','Color',ccolors(2,:),'LineWidth',1);
 ph(3) = plot([t;tA(2:end);tHistory(2:end)'],[x(:,3);xA(2:end,3);xHistory(3,2:end)'],'-','Color',ccolors(3,:),'LineWidth',1);
 
 plot([t;tHistory'],zeros(length([t;tHistory']),1),'-k','LineWidth',0.5)
-% plot([t;tHistory'],xref1(1)*ones(length([t;tHistory']),1),'-','Color',ccolors(1,:),'LineWidth',0.5)
-% plot([t;tHistory'],xref1(2)*ones(length([t;tHistory']),1),'-','Color',ccolors(2,:),'LineWidth',0.5)
 plot([tHistory'],xref1(1)*ones(length([tHistory']),1),'-','Color',ccolors(1,:),'LineWidth',0.5)
 plot([tHistory'],xref1(2)*ones(length([tHistory']),1),'-','Color',ccolors(2,:),'LineWidth',0.5)
 plot([tHistory'],xref1(3)*ones(length([tHistory']),1),'-','Color',ccolors(3,:),'LineWidth',0.5)

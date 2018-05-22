@@ -1,11 +1,11 @@
-% LOTKA-VOLTERRA system
+% LORENZ system
+% Visualization of MPC results for DMDc, SINDYc, NN models
 
 clear all, close all, clc
 SystemModel = 'LORENZ';
 
 figpath = ['../../FIGURES/',SystemModel,'/'];
 datapath = ['../../DATA/',SystemModel,'/'];
-% datapath = '/Users/ekaiser/Documents/Academia/Papers/KaKuBr_SINDYc-MPC/DATA/';
 addpath('../utils');
 
 %% Load Models
@@ -40,11 +40,7 @@ getValidationData
 
 %% FIGURE 1:  // Model comparison + Validation
 % Forcing
-% forcing = @(x,t) [(2*(sin(1*t)+sin(.1*t))).^2]; %0.33
-% forcing = @(x,t) [(1.8*(sin(1.1*t)+sin(.2*t))).^2]; %0.33
-% forcing = @(x,t) (10*sin(30*t)).*(1*cos(5*t));
 forcing = @(x,t) (5*sin(30*t)).^3;
-% tspanV =[tspan(end):dt:20];
 
 % Reference
 [tA,xA] = ode45(@(t,x)LorenzSys(t,x,forcing(x,t),p),tspanV,x(end,1:3),options);   % true model
@@ -245,4 +241,4 @@ set(gca,'LineWidth',1, 'FontSize',14)
 set(gcf,'Position',[100 100 300 200])
 set(gcf,'PaperPositionMode','auto')
 
-return    
+    
