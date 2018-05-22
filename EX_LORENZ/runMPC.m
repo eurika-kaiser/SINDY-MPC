@@ -1,23 +1,22 @@
-% Parameters: Model
+
+
 % Parameters True Model
-p.SIGMA = 10;             % True system parameters
+p.SIGMA = 10;             
 p.RHO = 28;
 p.BETA = 8/3;
-%dt = Models(1).dt;
 Nvar = 3;
 
 % Get training data
 ONLY_TRAINING_LENGTH = 1;
-InputSignalType = 'sphs';% prbs; chirp; noise; sine2; sphs; mixed
+InputSignalType = 'sphs';
 getTrainingData
 
 % Get validation data
-InputSignalType = 'sine2';% prbs; chirp; noise; sine2; sphs; mixed
+InputSignalType = 'sine2';
 getValidationData
 
 % Reference
 forcing = @(x,t) (5*sin(30*t)).^3;
-% tspanV =[tspan(end):dt:20];
 [tA,xA] = ode45(@(t,x)LorenzSys(t,x,forcing(x,t),p),tspanV,x(end,1:3),options);   
 uA = forcing(0,tspan);
 
@@ -38,12 +37,11 @@ Tcontrol = tA(end);             % Time offset to combine training, prediction an
 
 % Parameters Models
 ModelCollection = {'DMDc','DelayDMDc', 'SINDYc', 'NARX'};
-%Nmodels = length(ModelCollection);
 
 clear Results
 Results(1:Nmodels) = struct('x',[], 'u', [], 't', [], 'xref', [], 'J', []);
 
-%%
+%% Execute MPC for all models
 for iM = 1:Nmodels
     disp(['Select model ',num2str(iM) ' of ',num2str(Nmodels)])
     
