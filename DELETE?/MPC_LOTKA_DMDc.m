@@ -1,4 +1,5 @@
 % LOTKA-VOLTERRA system
+% Run MPC for various prediction horizon lengths
 
 clear all, close all, clc
 figpath = '../../FIGURES/';

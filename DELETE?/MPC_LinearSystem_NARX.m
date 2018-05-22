@@ -1,4 +1,5 @@
 % LOTKA-VOLTERRA system
+% Run MPC for different prediction horizon lengths
 
 clear all, close all, clc
 figpath = '../../FIGURES/';
@@ -14,7 +15,7 @@ omega = 0.1;
 sigma = 0.04;
 LinearSystem = @(t,x,u) [-sigma omega; -omega -sigma]*x + [1;u];
 Pf = 10; K = 10; A = 5;
-forcing = @(x,t) A*sphs(Pf,K,t); %(t<50)*A*sphs(Pf,K,t);
+forcing = @(x,t) A*sphs(Pf,K,t); 
 
 % Integrate
 x0 = [1;1];
@@ -45,9 +46,6 @@ rng(2,'twister')
 yt = con2seq(x);
 yi = con2seq(u); 
 
-% prepare validation data
-%yv = con2seq(xA');
-
 % Neural network
 stateDelays = 1;
 inputDelays = 1;
@@ -60,11 +58,6 @@ net = narxnet(inputDelays,stateDelays, hiddenSizes);
 net.trainFcn = 'trainlm';%trainbr; trainlm; trainscg
 net.trainParam.min_grad = 1e-10;
 net.trainParam.showCommandLine = 1;
-% net.trainParam.epochs = 1000;
-% net.divideParam.trainRatio = 70/100;
-% net.divideParam.valRatio = 15/100;
-% net.divideParam.testRatio = 15/100;
-% net.performFcn = 'mse';  % Mean squared error
 
 % Prepares training data (shifting, copying feedback targets into inputs as needed, etc.)
 [Us,Ui,Si,Ss] = preparets(net,yi,{},yt); %yt
@@ -73,15 +66,6 @@ net.trainParam.showCommandLine = 1;
 tic
 net = train(net,Us,Ss,Ui,Si);
 toc
-
-% Plots
-%figure, plotperform(tr)
-%figure, plottrainstate(tr)
-%figure, ploterrhist(e)
-%figure, plotregression(t,y)
-%figure, plotresponse(t,y)
-%figure, ploterrcorr(e)
-%figure, plotinerrcorr(x,e)
 
 % Close loop for recursive prediction
 netc = closeloop(net);
@@ -123,22 +107,22 @@ print('-depsc2', [figpath,'EX_',sys,'_SI_NARX.eps']);
 % Parameters MPC
 options = optimoptions('fmincon','Algorithm','sqp','Display','none', ...
     'MaxIterations',100);
-Ts = 0.1;                   % Sampling time
-N  = 10;                     % Control / prediction horizon (number of iterations)
-Duration = 10;             % Run for 'Duration' time units
-Nt = (Duration/Ts)+1;       %
-Ton = 0;                    % Time units when control is turned on
+Ts = 0.1;                       % Sampling time
+N  = 10;                        % Control / prediction horizon (number of iterations)
+Duration = 10;                  % Run for 'Duration' time units
+Nt = (Duration/Ts)+1;       
+Ton = 0;                        % Time units when control is turned on
 Nvar = 2;
-Q = [1 0];                  % State weights
-R = 0.5;%0.5;                    % du weights
-Ru = 0.5;%0.5;                   % u weights
+Q = [1 0];                      % State weights
+R = 0.5;%0.5;                   % du weights
+Ru = 0.5;%0.5;                  % u weights
 B = [0; 1];
 C = eye(Nvar);
 D = 0;
-LB = [];%-100*ones(N,1);    % Lower bound of control input
-UB = [];%100*ones(N,1);     % Upper bound of control input
-x0n=x0(3:4)';                     % Initial condition
-xref1 = [g/d;a/b];          % critical point
+LB = [];                        % Lower bound of control input
+UB = [];                        % Upper bound of control input
+x0n=x0(3:4)';                   % Initial condition
+xref1 = [g/d;a/b];              % critical point
 
 % Parameters Models
 ModelCollection = {'DelayDMDc', 'SINDYc', 'NARX'};
@@ -154,37 +138,29 @@ p.g = g;
 pest.ahat = Xi(:,1:2);
 pest.polyorder = polyorder;
 pest.usesine = usesine;
-p.a = a;
-p.b = b;
-p.d = d;
-p.g = g;
 
 %%
 % Nvec = [1,3,5,7,10,15,20,25,30,35,40,45,50];
 Nvec = [2,4,6,8,9,11,12,13];
 
 for i = 1:length(Nvec);
-    Ts          = 0.1;           % Sampling time
-    N           = Nvec(i);             % Control / prediction horizon (number of iterations)
-    Duration    = 100;     % Run for 100 time units
+    Ts          = 0.1;              % Sampling time
+    N           = Nvec(i);          % Control / prediction horizon (number of iterations)
+    Duration    = 100;              % Run for 100 time units
     Nvar        = 2;
-    Q           = [1 0];          % State weights
-    R           = 0.5;%0.5;            % du weights
-    Ru = 0.5;%0.01;     % Control weights
+    Q           = [1 0];            % State weights
+    R           = 0.5;              % du weights
+    Ru = 0.5;                       % Control weights
     B = [0; 1];
     C = eye(Nvar);
     D = 0;
-    LB = [];%-100*ones(N,1);    % Lower bound of control input
-    UB = [];%100*ones(N,1);     % Upper bound of control input
-    x0n=x0';%[100; 50];       % Initial condition
+    LB = [];                        % Lower bound of control input
+    UB = [];                        % Upper bound of control input
+    x0n=x0';                        % Initial condition
     uopt0 = 0;
     
     
     xref1 = [g/d;a/b]; % critical point
-    % xref1 = [50;0];      % Reference values
-    % xref2 = [50;0];
-    % xref_vec = [xref1(1)*ones(size(0:Ts:10)),xref2(1)*ones(size(10+Ts:Ts:Duration));
-    %             xref1(2)*ones(size(0:Ts:10)),xref2(2)*ones(size(10+Ts:Ts:Duration))];
     
     options = optimoptions('fmincon','Algorithm','sqp','Display','none');
     
@@ -210,8 +186,6 @@ for i = 1:length(Nvec);
             COSTFUN = @(u) lotkaObjectiveFCN(u,x,Ts,N,xref,uopt(1),pest,diag(Q),R,Ru);
             CONSFUN = @(u) lotkaConstraintFCN(u,x,Ts,N,pest);
             uopt = fmincon(COSTFUN,uopt,[],[],[],[],LB,UB,CONSFUN,options);
-            %         uopt = fmincon(COSTFUN,uopt,[],[],[],[],LB,UB,[],options);
-            %     keyboard
         else
             uopt = uopt0.*ones(N,1);
             xref = [nan; nan];
@@ -263,44 +237,3 @@ for i = 1:length(Nvec);
     save(fullfile(datapath,['EX_LOTKA_MPC_SINDYc_N',num2str(N),'.mat']),'Results')
     
 end
-return
-%% Timestep
-Ts = 0.1;
-Lotka = @(t,x) [a*x(1)-b*x(1)*x(2);
-    -g*x(2)+d*x(1)*x(2)];
-Duration = 100;
-xnl = x0;
-for i = 1:Duration/Ts
-    xnlnew = rk4u(@lotkacontrol_discrete,xnl(:,end),0,Ts,1,[],p);
-    xnl = [xnl, xnlnew];
-end
-
-[t,xt] = ode45(Lotka,[1:Duration/Ts].*Ts,x0);
-
-figure,
-plot([0:Duration/Ts].*Ts,xnl','-k'), hold on, plot([0:Duration/Ts-1].*Ts,xt,'-r');
-%% Linearization
-xref1 = [g/d,a/b];
-xeq = x0';
-Ts = 0.1;
-Jacobian = @(x)[a-b*x(2) -b*x(1);
-    d*x(2)   d*x(1)-g];
-Lotka = @(x) [a*x(1)-b*x(1)*x(2);
-    -g*x(2)+d*x(1)*x(2)];
-dfdx = Lotka(xeq);
-A = Jacobian(xeq);
-
-sys = ss(A,B,eye(2),0);
-plant = c2d(sys,Ts);
-
-xt = x0;
-xnl = x0;
-for i = 1:1000
-    xtnew = plant.A*(xt(:,end));
-    xt = [xt, xtnew];
-    xnlnew = rk4u(@lotkacontrol_discrete,xnl(:,end),0,Ts,1,[],p);
-    xnl = [xnl, xnlnew];
-end
-figure,
-plot(xnl(:,:)','-k'), hold on, plot(xt'+repmat(xeq,[size(xt',1),1]),'-r');
-return
