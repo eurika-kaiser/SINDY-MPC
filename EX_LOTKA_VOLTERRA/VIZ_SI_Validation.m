@@ -1,4 +1,6 @@
-
+if size(uv,2)~=size(u,2) && size(u,1)~=1
+    u = u';
+end
 
 %% Show training and prediction
 clear ph
