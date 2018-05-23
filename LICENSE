@@ -1,0 +1,40 @@
+CiteMe License for Open Source Software, Version 0 draft 2016-06-24. (CiteMe OSS v0 draft)
+
+Copyright (c) 2018, Eurika Kaiser, eurika@uw.edu
+
+Permission to use, copy, modify, and/or distribute this software for any purpose
+with or without fee is hereby granted, provided that the above copyright notice
+and this permission notice appear in all copies.
+
+
+If this software is used to make a contribution to the findings published in an
+article, then the author(s) of that article are requested to include a citation
+using one of the references provided below.
+
+Scientific articles shall include:
+
+https://arxiv.org/abs/1711.05501
+
+Articles of any other type shall include:
+
+https://arxiv.org/abs/1711.05501
+
+
+If this software is used as a component of a CiteMe OSS licensed third-party
+software that requests a citation which supersedes the reference provided in
+this license in regard to its relevance to the findings published in the
+article, then the citation requested in this license shall be optional.
+
+If a large portion of this software is modified, then the author of the
+modifications may replace the references provided in this license by references
+that have a higher scientific relevance in regard to contributions the modified
+software may make to publishable findings.
+
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
+OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
+THIS SOFTWARE.
