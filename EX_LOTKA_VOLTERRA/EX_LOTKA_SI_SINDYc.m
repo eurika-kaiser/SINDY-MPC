@@ -17,7 +17,7 @@ getTrainingData
 ModelName = 'SINDYc';
 polyorder = 3;
 usesine = 0;
-lambda = 0.001; 
+lambda = 0.5; 
 trainSINDYc
 
 %% Prediction  over training phase
@@ -33,7 +33,7 @@ else
     for ct=1:N-1
         xSINDYc(:,ct+1) = rk4u(@sparseGalerkinControl_Discrete,xSINDYc(:,ct),u(ct),dt,1,[],p);
     end
-    xSINDYc = xSINDYc';%(:,2:N+1)';
+    xSINDYc = xSINDYc';
 end
 
 %% PhasePlots
@@ -85,7 +85,6 @@ ph(4) = plot(tspan,xSINDYc(:,2),'--','Color',ccolors(2,:)-[0.1 0.2 0.09],'LineWi
 xlim([0 100]), ylim([0 max(x(:))])
 xlabel('Time')
 ylabel('Population size')
-% legend('Prey (True)','Predator (True)', 'Prey (DMDc)','Predator (DMDc)')
 legend(ph([1,3]),'True',ModelName)
 set(gca,'LineWidth',1, 'FontSize',14)
 set(gcf,'Position',[100 100 300 200])
