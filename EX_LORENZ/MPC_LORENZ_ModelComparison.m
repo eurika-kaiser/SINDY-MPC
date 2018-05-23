@@ -10,8 +10,8 @@ clear all, close all, clc
 
 SystemModel = 'LORENZ';
 
-figpath = ['../../FIGURES/',SystemModel,'/'];mkdir(figpath)
-datapath = ['../../DATA/',SystemModel,'/'];mkdir(datapath)
+figpath = ['../FIGURES/',SystemModel,'/'];mkdir(figpath)
+datapath = ['../DATA/',SystemModel,'/'];mkdir(datapath)
 addpath('../utils');
 
 %% Parameters

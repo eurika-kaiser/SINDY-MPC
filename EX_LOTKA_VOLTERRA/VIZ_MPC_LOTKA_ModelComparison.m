@@ -1,8 +1,8 @@
 % LOTKA-VOLTERRA system
 
 clear all, close all, clc
-figpath = '../../FIGURES/NOT_USED/'; mkdir(figpath)
-datapath = '../../DATA/';
+figpath = '../FIGURES/NOT_USED/'; mkdir(figpath)
+datapath = '../DATA/';
 addpath('../utils');
 
 %% Load Models

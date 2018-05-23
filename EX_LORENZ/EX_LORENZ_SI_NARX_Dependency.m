@@ -11,8 +11,8 @@ DERIV_NOISE = 0;
 TRACK_MODEL_BEST = 0;
 
 %% Set paths
-figpath = ['../../FIGURES/EX_',SystemModel,'_Dependencies/NARX/',TrainAlg,'/']; mkdir(figpath)
-datapath = ['../../DATA/EX_',SystemModel,'_Dependencies/NARX/',TrainAlg,'/']; mkdir(datapath)
+figpath = ['../FIGURES/EX_',SystemModel,'_Dependencies/NARX/',TrainAlg,'/']; mkdir(figpath)
+datapath = ['../DATA/EX_',SystemModel,'_Dependencies/NARX/',TrainAlg,'/']; mkdir(datapath)
 addpath('../utils');
 
 %% Parameters

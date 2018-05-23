@@ -2,8 +2,8 @@
 % Function for TESTING
 
 clear all, close all, clc
-figpath = '../../FIGURES/HIV/'; mkdir(figpath)
-datapath = '../../DATA/HIV/'; mkdir(datapath)
+figpath = '../FIGURES/HIV/'; mkdir(figpath)
+datapath = '../DATA/HIV/'; mkdir(datapath)
 addpath('../utils');
 
 SystemModel = 'HIV';

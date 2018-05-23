@@ -2,8 +2,8 @@
 % System identification: NARX / NN
 
 clear all, close all, clc
-figpath = '../../FIGURES/F8/'; mkdir(figpath)
-datapath = '../../DATA/F8/'; mkdir(datapath)
+figpath = '../FIGURES/F8/'; mkdir(figpath)
+datapath = '../DATA/F8/'; mkdir(datapath)
 addpath('../utils');
 
 SystemModel = 'F8';

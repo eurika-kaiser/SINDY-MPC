@@ -2,7 +2,7 @@
 % Visualizations of results
 
 clear all, close all, clc
-figpath = '../../FIGURES/LORENZ_SLIDES/'; mkdir(figpath)
+figpath = '../FIGURES/LORENZ_SLIDES/'; mkdir(figpath)
 addpath('../utils');
 
 

@@ -1,12 +1,12 @@
-% LOTKA-VOLTERRA system
+% LORENZ system
 
 clear all, close all, clc
 
 WORKING = 1;
 SystemModel = 'LORENZ';
 
-figpath = '../../FIGURES/LORENZ/'; mkdir(figpath)
-datapath = '../../DATA/';
+figpath = '../FIGURES/LORENZ/'; mkdir(figpath)
+datapath = '../DATA/';
 addpath('../utils');
 
 %% Load Models

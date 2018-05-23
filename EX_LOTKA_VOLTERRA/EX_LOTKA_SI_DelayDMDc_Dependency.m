@@ -14,19 +14,14 @@ if Ndelay == 1
     ModelName = 'DMDc';
 elseif Ndelay>1
     ModelName = 'DelayDMDc';
-    disp('Option not incorporated.')
+    disp('Option not implemented.')
     return
 end
 
-if WORKING == 0
-    figpath = ['../../FIGURES/EX_LOTKA_Dependencies/',ModelName,'/']; mkdir(figpath)
-    datapath = ['../../DATA/EX_LOTKA_Dependencies/',ModelName,'/']; mkdir(datapath)
-    
-elseif WORKING == 1
-    figpath = ['/Users/ekaiser/Documents/Academia/Papers/KaKuBr_SINDYc-MPC/WORKING/FIGURES/',ModelName,'/']; mkdir(figpath)
-    datapath = ['/Users/ekaiser/Documents/Academia/Papers/KaKuBr_SINDYc-MPC/WORKING/DATA/',ModelName,'/']; mkdir(datapath)
-    
-end
+
+figpath = ['../FIGURES/EX_LOTKA_Dependencies/',ModelName,'/']; mkdir(figpath)
+datapath = ['../DATA/EX_LOTKA_Dependencies/',ModelName,'/']; mkdir(datapath)
+
 addpath('../utils');
 %% Parameters
 dep_trainlength = 1;

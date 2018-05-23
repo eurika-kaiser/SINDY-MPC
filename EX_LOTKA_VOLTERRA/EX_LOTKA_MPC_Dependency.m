@@ -32,13 +32,8 @@ N_LENGTHS = length(Ntrain_vec);
 Nmodels = N_LENGTHS;
 
 %% Folders
-if WORKING == 1
-    figpath0 = '/Users/ekaiser/Documents/Academia/Papers/KaKuBr_SINDYc-MPC/WORKING/FIGURES/EX_LOTKA_Dependencies/';
-    datapath0 = '/Users/ekaiser/Documents/Academia/Papers/KaKuBr_SINDYc-MPC/WORKING/DATA/EX_LOTKA_Dependencies/';
-else
-    figpath0 = '../../FIGURES/EX_LOTKA_Dependencies/';
-    datapath0 = '../../DATA/EX_LOTKA_Dependencies/'; % DATA_1!!!!!!
-end
+figpath0 = '../FIGURES/EX_LOTKA_Dependencies/';
+datapath0 = '../DATA/EX_LOTKA_Dependencies/'; 
 
 if strcmp(ModelName,'NARX')
     figpath = [figpath0, ModelName, '/',TrainAlg,'/'];

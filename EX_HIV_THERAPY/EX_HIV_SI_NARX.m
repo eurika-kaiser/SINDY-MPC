@@ -2,8 +2,8 @@
 % System identification using neural network model
  
 clear all, close all, clc
-figpath = '../../FIGURES/HIV/';
-datapath = '../../DATA/HIV/';
+figpath = '../FIGURES/HIV/';
+datapath = '../DATA/HIV/';
 addpath('../utils');
 
 SystemModel = 'HIV';

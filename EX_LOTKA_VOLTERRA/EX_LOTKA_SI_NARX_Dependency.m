@@ -6,20 +6,13 @@ TrainAlg = 'trainbr'; %trainlm,trainbr
 
 
 DERIV_NOISE = 0;
-WORKING = 1;
 TRACK_MODEL_BEST = 1;
 
-%%
+%% paths & folders
 
-if WORKING == 0
-    figpath = ['../../FIGURES/EX_LOTKA_Dependencies/NARX/',TrainAlg,'/']; mkdir(figpath)
-    datapath = ['../../DATA/EX_LOTKA_Dependencies/NARX/',TrainAlg,'/']; mkdir(datapath)
-    
-elseif WORKING == 1
-    figpath = ['/Users/ekaiser/Documents/Academia/Papers/KaKuBr_SINDYc-MPC/WORKING/FIGURES/NARX/',TrainAlg,'/']; mkdir(figpath)
-    datapath = ['/Users/ekaiser/Documents/Academia/Papers/KaKuBr_SINDYc-MPC/WORKING/DATA/NARX/',TrainAlg,'/']; mkdir(datapath)
-    
-end
+figpath = ['../FIGURES/EX_LOTKA_Dependencies/NARX/',TrainAlg,'/']; mkdir(figpath)
+datapath = ['../DATA/EX_LOTKA_Dependencies/NARX/',TrainAlg,'/']; mkdir(datapath)
+
 addpath('../utils');
 
 %% Parameters

@@ -2,8 +2,8 @@
 % System identification: NARX
 
 clear all, close all, clc
-figpath = '../../FIGURES/LORENZ/';
-datapath = '../../DATA/LORENZ/';
+figpath = '../FIGURES/LORENZ/';
+datapath = '../DATA/LORENZ/';
 addpath('../utils');
 
 SystemModel = 'LORENZ';

@@ -2,8 +2,8 @@
 % System identification: extended DMD with control
 
 clear all, close all, clc
-figpath = '../../FIGURES/HIV/'; mkdir(figpath)
-datapath = '../../DATA/HIV/'; mkdir(datapath)
+figpath = '../FIGURES/HIV/'; mkdir(figpath)
+datapath = '../DATA/HIV/'; mkdir(datapath)
 addpath('../utils');
 
 SystemModel = 'HIV';

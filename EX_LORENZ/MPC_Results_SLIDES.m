@@ -3,8 +3,8 @@
 
 clear all; close all;
 
-figpath = '../../FIGURES/LORENZ_SLIDES/'; mkdir(figpath)
-datapath = '../../DATA2/LORENZ/';
+figpath = '../FIGURES/LORENZ_SLIDES/'; mkdir(figpath)
+datapath = '../DATA2/LORENZ/';
 SystemModel = 'LORENZ';
 InputSignalTypeModel = 'sphs';
 InputSignalType = 'sine2';

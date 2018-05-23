@@ -9,14 +9,14 @@ SystemModel = 'LORENZ';
 DERIV_NOISE = 0;
 TRACK_MODEL_BEST = 0;
 %% Set Paths
-figpath = '../../FIGURES/EX_LORENZ_Dependencies/SINDYc/'; mkdir(figpath)
-datapath = '../../DATA/EX_LORENZ_Dependencies/SINDYc/'; mkdir(datapath)
+figpath = '../FIGURES/EX_LORENZ_Dependencies/SINDYc/'; mkdir(figpath)
+datapath = '../DATA/EX_LORENZ_Dependencies/SINDYc/'; mkdir(datapath)
 
 % Overwrite if necessary
 if exist('DERIV_NOISE')
     if DERIV_NOISE == 1
-        figpath = '../../FIGURES/EX_LORENZ_Dependencies/SINDYc/TVRegDiff/'; mkdir(figpath)
-        datapath = '../../DATA/EX_LORENZ_Dependencies/SINDYc/TVRegDiff/'; mkdir(datapath)
+        figpath = '../FIGURES/EX_LORENZ_Dependencies/SINDYc/TVRegDiff/'; mkdir(figpath)
+        datapath = '../DATA/EX_LORENZ_Dependencies/SINDYc/TVRegDiff/'; mkdir(datapath)
     end
 end
 addpath('../utils');

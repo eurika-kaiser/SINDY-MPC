@@ -1,6 +1,6 @@
 clear all, close all, clc
-figpath = '../../FIGURES/'; mkdir(figpath)
-datapath = '../../DATA/EX_LOTKA_Dependencies/';
+figpath = '../FIGURES/'; mkdir(figpath)
+datapath = '../DATA/EX_LOTKA_Dependencies/';
 addpath('../utils');
 
 %% Paramaters

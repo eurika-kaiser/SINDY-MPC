@@ -3,8 +3,8 @@
 
 
 clear all, close all, clc
-figpath = '../../FIGURES/';
-datapath = '../../DATA/';
+figpath = '../FIGURES/';
+datapath = '../DATA/';
 addpath('../utils');
 
 %% Generate Data

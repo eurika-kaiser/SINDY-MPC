@@ -4,32 +4,20 @@
 clear all, close all, clc
 
 DERIV_NOISE = 0;
-WORKING = 1;
 TRACK_MODEL_BEST = 1;
-%%
-if WORKING == 0
-    figpath = '../../FIGURES/EX_LOTKA_Dependencies/SINDYc/'; mkdir(figpath)
-    datapath = '../../DATA/EX_LOTKA_Dependencies/SINDYc/'; mkdir(datapath)
-    
-    % Overwrite if necessary
-    if exist('DERIV_NOISE')
-        if DERIV_NOISE == 1
-            figpath = '../../FIGURES/EX_LOTKA_Dependencies/SINDYc/TVRegDiff/'; mkdir(figpath)
-            datapath = '../../DATA/EX_LOTKA_Dependencies/SINDYc/TVRegDiff/'; mkdir(datapath)
-        end
-    end
-elseif WORKING == 1
-    figpath = '/Users/ekaiser/Documents/Academia/Papers/KaKuBr_SINDYc-MPC/WORKING/FIGURES/SINDYc/'; mkdir(figpath)
-    datapath = '/Users/ekaiser/Documents/Academia/Papers/KaKuBr_SINDYc-MPC/WORKING/DATA/SINDYc/'; mkdir(datapath)
-    
-    % Overwrite if necessary
-    if exist('DERIV_NOISE')
-        if DERIV_NOISE == 1
-            figpath = '/Users/ekaiser/Documents/Academia/Papers/KaKuBr_SINDYc-MPC/WORKING/FIGURES/SINDYc/TVRegDiff/'; mkdir(figpath)
-            datapath = '/Users/ekaiser/Documents/Academia/Papers/KaKuBr_SINDYc-MPC/WORKING/DATA/SINDYc/TVRegDiff/'; mkdir(datapath)
-        end
+%% Files & folders
+
+figpath = '../FIGURES/EX_LOTKA_Dependencies/SINDYc/'; mkdir(figpath)
+datapath = '../DATA/EX_LOTKA_Dependencies/SINDYc/'; mkdir(datapath)
+
+% Overwrite if necessary
+if exist('DERIV_NOISE')
+    if DERIV_NOISE == 1
+        figpath = '../FIGURES/EX_LOTKA_Dependencies/SINDYc/TVRegDiff/'; mkdir(figpath)
+        datapath = '../DATA/EX_LOTKA_Dependencies/SINDYc/TVRegDiff/'; mkdir(datapath)
     end
 end
+
 addpath('../utils');
 
 %% Parameters
@@ -197,7 +185,7 @@ for iN = 1:N_LENGTHS
             Model.Ttraining = telapsed;
             Model.Err = err;
             Model.ErrM = errM;
-
+            
             
             if SAVE_MODEL == 1
                 if mod(iR,MOD_VAL) == 0 || iR == 1
@@ -214,13 +202,13 @@ for iN = 1:N_LENGTHS
             
             %% Track best model
             % errBest = 10^12*ones(N_LENGTHS,N_ETA)
-            if TRACK_MODEL_BEST == 1 
-                if Results.err(iR)<errBest(iN,iNoise) || iR == 1 
+            if TRACK_MODEL_BEST == 1
+                if Results.err(iR)<errBest(iN,iNoise) || iR == 1
                     errBest(iN,iNoise) = Results.err(iR);
                     
                     BestModel = Model;
                     save(fullfile(datapath,['EX_LOTKA_SI_',ModelName,'_',InputSignalType,'_N',sprintf('%04g',Ntrain_vec(iN)),'_Eta',sprintf('%03g',100*eta_vec(iNoise)),'_BEST_MODEL.mat']),'Model')
-
+                    
                     %BestModels(iN,iNoise) = Model;
                     BestModelsList(iN,iNoise) = iR;
                     Lambda(iN,iNoise) = lambda;

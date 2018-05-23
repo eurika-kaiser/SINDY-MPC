@@ -1,7 +1,7 @@
 % LOTKA-VOLTERRA system
 
 clear all, close all, clc
-figpath = '../../FIGURES/';
+figpath = '../FIGURES/';
 addpath('../utils');
 
 %% Generate Data

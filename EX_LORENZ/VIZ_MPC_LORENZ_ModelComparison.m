@@ -4,8 +4,8 @@
 clear all, close all, clc
 SystemModel = 'LORENZ';
 
-figpath = ['../../FIGURES/',SystemModel,'/'];
-datapath = ['../../DATA/',SystemModel,'/'];
+figpath = ['../FIGURES/',SystemModel,'/'];
+datapath = ['../DATA/',SystemModel,'/'];
 addpath('../utils');
 
 %% Load Models

@@ -2,9 +2,8 @@
 % Visualize cost function for different cases
 
 clear all, close all, clc
-figpath = '../../FIGURES/';
-% datapath = '../../DATA/';
-datapath = '/Users/ekaiser/Documents/Academia/Papers/KaKuBr_SINDYc-MPC/DATA/';
+figpath = '../FIGURES/';
+datapath = '../DATA/';
 addpath('../utils');
 
 %% Load Data

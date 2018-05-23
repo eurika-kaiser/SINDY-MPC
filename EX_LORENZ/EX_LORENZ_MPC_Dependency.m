@@ -32,8 +32,8 @@ N_LENGTHS = length(Ntrain_vec);
 Nmodels = N_LENGTHS;
 
 %% Folders
-figpath0 = ['../../FIGURES/EX_',SystemModel,'_Dependencies/'];
-datapath0 = ['../../DATA/EX_',SystemModel,'_Dependencies/'];
+figpath0 = ['../FIGURES/EX_',SystemModel,'_Dependencies/'];
+datapath0 = ['../DATA/EX_',SystemModel,'_Dependencies/'];
 
 if strcmp(ModelName,'NARX')
     figpath = [figpath0, ModelName, '/',TrainAlg,'/TL/'];

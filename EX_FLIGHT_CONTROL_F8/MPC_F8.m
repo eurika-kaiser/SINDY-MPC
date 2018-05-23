@@ -6,8 +6,8 @@ clear all, close all, clc
 
 SystemModel = 'F8';
 
-figpath = ['../../FIGURES/',SystemModel,'/'];mkdir(figpath)
-datapath = ['../../DATA/',SystemModel,'/'];mkdir(datapath)
+figpath = ['../FIGURES/',SystemModel,'/'];mkdir(figpath)
+datapath = ['../DATA/',SystemModel,'/'];mkdir(datapath)
 addpath('../utils');
 
 %% MPC
