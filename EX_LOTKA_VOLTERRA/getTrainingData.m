@@ -12,6 +12,9 @@ xref = [g/d;a/b]; % critical point
 
 dt = 0.1;
 
+if exist('ONLY_TRAINING_LENGTH') == 0
+    ONLY_TRAINING_LENGTH = 1;
+end
 if ONLY_TRAINING_LENGTH == 1
     % Training
     tspan=[0:dt:200];
