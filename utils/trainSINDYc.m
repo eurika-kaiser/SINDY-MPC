@@ -3,6 +3,11 @@ if eps == 0
     DERIV_NOISE = 0;
 end
 
+
+if size(x,1)==size(u,2)
+    u = u';
+end
+
 % Compute Derivative
 if any(strcmp(InputSignalType,{'sine2', 'sine3', 'chirp','prbs', 'sphs','mixed', 'noise','unforced'})==1) && DERIV_NOISE == 0%eps==0 % eps~=0
     % compute derivative using fourth order central difference
