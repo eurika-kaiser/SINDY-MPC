@@ -40,7 +40,7 @@ r1 = size(Hx,1); r2 = size(Hx,1);
 [sysmodel_DMDc,U,Up] = DelayDMDc_MV(Hx,Hu,size(Hx,1),size(Hx,1),dt,size(Hx,1),size(Hu,1),2);
 
 %% Prediction over training phase
-[xDMDc,~] = lsim(sysmodel_DMDc,Hu',tspan(1:end-1),x(1,:)'-xmean');
+[xDMDc,~] = lsim(sysmodel_DMDc,Hu(1:end-1)',tspan(1:end-1),x(1,:)'-xmean');
 xDMDc = xDMDc + repmat(xmean,[length(tspan)-1 1]);
 
 %% Show validation
